@@ -1,0 +1,1544 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+    <title>Tessella</title>
+    <style>
+      button, [role="button"], select, summary, input:not([type="checkbox"], [type="radio"]) { min-height: 2.25rem; }
+    </style>
+    <style>
+      :root {
+        --bg: #f4f4f2;
+        --surface: #ffffff;
+        --surface-2: #ececea;
+        --ink: #1c1e1c;
+        --ink-2: #555a55;
+        --line: #d8d8d2;
+        --accent: #0f766e;
+        --accent-ink: #ffffff;
+        --accent-soft: #e0efec;
+        --pass: #15803d;
+        --pass-bg: #e5f4e9;
+        --fail: #b91c1c;
+        --fail-bg: #fbe7e7;
+        --warn: #b45309;
+        --warn-bg: #fdf0dd;
+        --checker-a: #ffffff;
+        --checker-b: #dcdcdc;
+        --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #131514;
+          --surface: #1d201e;
+          --surface-2: #262926;
+          --ink: #e8eae7;
+          --ink-2: #a3a8a2;
+          --line: #383c38;
+          --accent: #2dd4bf;
+          --accent-ink: #06231f;
+          --accent-soft: #173330;
+          --pass: #4ade80;
+          --pass-bg: #17301e;
+          --fail: #f87171;
+          --fail-bg: #3a1d1d;
+          --warn: #fbbf24;
+          --warn-bg: #38290f;
+          --checker-a: #2a2d2a;
+          --checker-b: #1e201e;
+        }
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; }
+      body {
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "PingFang TC", "PingFang SC", "Microsoft JhengHei", "Noto Sans TC", system-ui, sans-serif;
+        font-size: 15px;
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+      }
+      .wrap { max-width: 1180px; margin: 0 auto; padding: 20px 16px 64px; }
+      h1 { font-size: 24px; margin: 4px 0 4px; letter-spacing: .01em; }
+      .lede { color: var(--ink-2); margin: 0 0 20px; max-width: 46em; }
+      h2 { font-size: 16px; margin: 0 0 10px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+      h2 .step {
+        font-family: var(--mono); font-size: 11px; font-weight: 700;
+        background: var(--ink); color: var(--bg);
+        width: 20px; height: 20px; border-radius: 50%;
+        display: inline-flex; align-items: center; justify-content: center; flex: none;
+      }
+      section.card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 18px;
+        margin-bottom: 16px;
+      }
+      .hidden { display: none !important; }
+      .mono { font-family: var(--mono); }
+
+      /* ---------- dropzone ---------- */
+      .dropzone {
+        border: 1.5px dashed var(--line);
+        border-radius: 10px;
+        padding: 30px 18px;
+        text-align: center;
+        cursor: pointer;
+        transition: border-color .15s, background .15s;
+        background: var(--surface);
+      }
+      .dropzone:hover, .dropzone:focus-visible { border-color: var(--accent); outline: none; }
+      .dropzone.drag { border-color: var(--accent); background: var(--accent-soft); }
+      .dropzone .big { font-size: 17px; font-weight: 600; margin: 6px 0 2px; }
+      .dropzone .small { color: var(--ink-2); font-size: 13px; }
+      .dropzone svg { color: var(--accent); }
+      .dz-actions { margin-top: 14px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+      button {
+        font: inherit; font-size: 14px;
+        border: 1px solid var(--line);
+        background: var(--surface);
+        color: var(--ink);
+        border-radius: 8px;
+        padding: 6px 14px;
+        cursor: pointer;
+      }
+      button:hover { border-color: var(--accent); }
+      button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+      button.primary:hover { filter: brightness(1.08); }
+      button:disabled { opacity: .45; cursor: not-allowed; }
+      button.seg { border-radius: 0; margin-left: -1px; }
+      button.seg:first-child { border-radius: 8px 0 0 8px; margin-left: 0; }
+      button.seg:last-child { border-radius: 0 8px 8px 0; }
+      button.seg[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; z-index: 1; position: relative; }
+      .segrow { display: inline-flex; flex-wrap: wrap; }
+
+      /* ---------- meta chips ---------- */
+      .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+      .chip {
+        font-family: var(--mono); font-size: 12.5px;
+        background: var(--surface-2); border-radius: 6px; padding: 4px 9px;
+        white-space: nowrap;
+      }
+      .chip b { font-weight: 700; }
+
+      /* ---------- preview ---------- */
+      .checker {
+        background:
+          conic-gradient(var(--checker-b) 0 25%, var(--checker-a) 0 50%, var(--checker-b) 0 75%, var(--checker-a) 0);
+        background-size: 20px 20px;
+      }
+      .preview-box { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+      .preview-box canvas, .preview-box img { display: block; width: 100%; height: auto; }
+      .orig-wrap { position: relative; }
+      .orig-wrap canvas.overlay-grid {
+        position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none;
+      }
+
+      /* ---------- controls ---------- */
+      .controls-grid { display: grid; grid-template-columns: 1fr; gap: 18px; }
+      @media (min-width: 760px) { .controls-grid { grid-template-columns: 1.2fr .8fr; } }
+      .field-label { font-size: 13px; color: var(--ink-2); margin-bottom: 7px; font-weight: 600; }
+      .presets { display: flex; flex-wrap: wrap; gap: 8px; }
+      .presets button { min-width: 74px; padding: 8px 10px; line-height: 1.3; }
+      .presets button .sub { display: block; font-size: 11px; font-family: var(--mono); opacity: .75; font-weight: 400; }
+      .presets button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 700; }
+      .custom-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+      .custom-row label { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; }
+      input[type="number"] {
+        font: inherit; font-family: var(--mono); width: 64px;
+        border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px;
+        background: var(--surface); color: var(--ink);
+      }
+      .hint { font-size: 13px; color: var(--ink-2); margin-top: 8px; }
+      .toggle-line { display: flex; align-items: center; gap: 8px; min-height: 36px; cursor: pointer; font-size: 14px; }
+      .toggle-line input { width: 18px; height: 18px; accent-color: var(--accent); }
+
+      /* ---------- tiles ---------- */
+      .tiles-frame { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface-2); }
+      .tiles-grid { display: grid; gap: 0; line-height: 0; }
+      .tile-cell { position: relative; overflow: hidden; }
+      .tile-cell canvas { display: block; width: 100%; height: auto; }
+      .tile-tag {
+        position: absolute; top: 4px; left: 4px;
+        font-family: var(--mono); font-size: 11px; line-height: 1;
+        background: rgba(0,0,0,.62); color: #fff;
+        padding: 3px 6px; border-radius: 4px;
+        pointer-events: none;
+      }
+      .tiles-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; align-items: center; }
+      .gap-note { font-size: 13px; color: var(--ink-2); }
+
+      /* ---------- verify ---------- */
+      .verdict {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 13px; font-weight: 700;
+        padding: 3px 10px; border-radius: 999px;
+      }
+      .verdict.pass { background: var(--pass-bg); color: var(--pass); }
+      .verdict.fail { background: var(--fail-bg); color: var(--fail); }
+      .verdict.wait { background: var(--surface-2); color: var(--ink-2); }
+      .check { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; background: var(--surface); }
+      .check-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+      .check-head .name { font-weight: 700; font-size: 15px; }
+      .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px 18px; margin-top: 8px; }
+      .metric .k { font-size: 12px; color: var(--ink-2); }
+      .metric .v { font-family: var(--mono); font-size: 15px; font-weight: 600; word-break: break-all; }
+      .check p.desc { margin: 2px 0 0; color: var(--ink-2); font-size: 13.5px; }
+      progress { width: 100%; height: 8px; accent-color: var(--accent); }
+      .compare-stage { position: relative; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+      .compare-stage canvas { display: block; width: 100%; height: auto; }
+      .compare-stage canvas.top { position: absolute; inset: 0; height: 100%; }
+      .stage-label {
+        position: absolute; left: 8px; bottom: 8px; z-index: 2;
+        font-family: var(--mono); font-size: 12px;
+        background: rgba(0,0,0,.65); color: #fff; padding: 3px 8px; border-radius: 4px;
+      }
+      .subtools { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; align-items: center; }
+      select {
+        font: inherit; font-size: 14px;
+        border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px;
+        background: var(--surface); color: var(--ink); max-width: 100%;
+      }
+      .seam-box canvas { width: 100%; height: auto; display: block; image-rendering: pixelated; border: 1px solid var(--line); border-radius: 8px; }
+
+      /* ---------- table ---------- */
+      .tile-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+      .tile-table th, .tile-table td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+      .tile-table th { color: var(--ink-2); font-weight: 600; font-size: 12.5px; }
+      .tile-table td.num, .tile-table th.num { font-family: var(--mono); }
+      .tile-table button { min-height: 2rem; padding: 2px 10px; font-size: 13px; }
+      @media (max-width: 620px) {
+        .tile-table thead { display: none; }
+        .tile-table, .tile-table tbody, .tile-table tr, .tile-table td { display: block; width: 100%; }
+        .tile-table tr { border: 1px solid var(--line); border-radius: 8px; margin-bottom: 8px; padding: 6px 4px; }
+        .tile-table td { border-bottom: none; padding: 3px 8px; }
+        .tile-table td::before { content: attr(data-k); color: var(--ink-2); font-size: 12px; margin-right: 8px; }
+      }
+      .err {
+        background: var(--fail-bg); color: var(--fail);
+        border-radius: 8px; padding: 10px 14px; margin-top: 12px; font-size: 14px;
+      }
+      footer { color: var(--ink-2); font-size: 12.5px; margin-top: 8px; }
+
+      /* ================= v2 · UI / 動效 / 上手性 ================= */
+      :root { --ease: cubic-bezier(.22,.9,.28,1); --spring: cubic-bezier(.34,1.4,.4,1); }
+      html { scroll-behavior: smooth; }
+      @media (prefers-reduced-motion: reduce) {
+        html { scroll-behavior: auto; }
+        *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+      }
+      h1 { font-size: 28px; font-weight: 800; letter-spacing: -.01em; }
+      .lede { font-size: 15.5px; }
+      section.card { border-radius: 14px; padding: 20px; scroll-margin-top: 92px; box-shadow: 0 1px 2px rgba(20,24,20,.04), 0 8px 24px -18px rgba(20,24,20,.25); }
+      section.card.reveal { opacity: 0; transform: translateY(14px); }
+      section.card.reveal.in { opacity: 1; transform: none; transition: opacity .55s var(--ease), transform .55s var(--ease); }
+      button { transition: transform .12s var(--ease), border-color .15s, background .15s, filter .15s, box-shadow .15s; }
+      button:active { transform: scale(.97); }
+      button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+      button.primary { box-shadow: 0 6px 16px -8px var(--accent); }
+      button.primary:hover { box-shadow: 0 8px 20px -8px var(--accent); }
+
+      /* 步驟導覽 */
+      .stepper { display: flex; align-items: flex-start; gap: 0; margin: 4px 0 20px; padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; position: sticky; top: 10px; z-index: 20; box-shadow: 0 10px 30px -22px rgba(20,24,20,.45); backdrop-filter: blur(6px); }
+      .stepper .stp { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; position: relative; min-width: 0; }
+      .stepper .stp:not(:last-child)::after { content: ""; position: absolute; top: 15px; left: calc(50% + 20px); right: calc(-50% + 20px); height: 2px; background: var(--line); border-radius: 2px; }
+      .stepper .stp.done:not(:last-child)::after { background: var(--pass); }
+      .stepper .dot { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--line); background: var(--surface); color: var(--ink-2); font-family: var(--mono); font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; position: relative; z-index: 1; transition: all .3s var(--ease); }
+      .stepper .lbl { font-size: 12.5px; color: var(--ink-2); font-weight: 600; white-space: nowrap; }
+      .stepper .stp.active .dot { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); box-shadow: 0 0 0 5px var(--accent-soft); animation: pulseRing 1.8s ease-out infinite; }
+      .stepper .stp.active .lbl { color: var(--ink); }
+      .stepper .stp.done .dot { border-color: var(--pass); background: var(--pass); color: #fff; }
+      .stepper .stp.done .lbl { color: var(--ink); }
+      @keyframes pulseRing { 0% { box-shadow: 0 0 0 0 var(--accent-soft); } 70% { box-shadow: 0 0 0 7px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
+      @media (max-width: 520px) { .stepper { padding: 10px 8px; } .stepper .lbl { font-size: 11px; } }
+
+      /* 拖放區 */
+      .dropzone { padding: 38px 18px; border-width: 2px; position: relative; overflow: hidden; }
+      .dropzone::before { content: ""; position: absolute; inset: 0; background: radial-gradient(420px 160px at 50% 0%, var(--accent-soft), transparent 70%); opacity: 0; transition: opacity .25s; pointer-events: none; }
+      .dropzone:hover::before, .dropzone.drag::before { opacity: 1; }
+      .dropzone.drag { transform: scale(1.01); }
+      .dropzone svg { transition: transform .3s var(--spring); }
+      .dropzone:hover svg, .dropzone.drag svg { transform: translateY(-4px) scale(1.06); }
+      .dropzone .keys { margin-top: 10px; font-size: 12px; color: var(--ink-2); }
+      kbd { font-family: var(--mono); font-size: 11px; background: var(--surface-2); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; padding: 1px 5px; }
+      .page-drag { position: fixed; inset: 10px; border: 2.5px dashed var(--accent); border-radius: 18px; background: color-mix(in srgb, var(--accent-soft) 55%, transparent); z-index: 90; display: none; align-items: center; justify-content: center; font-size: 20px; font-weight: 800; color: var(--accent); pointer-events: none; }
+      .page-drag.on { display: flex; animation: fadeIn .18s var(--ease); }
+      @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+      /* 切法按鈕：迷你示意圖 */
+      .presets button { min-width: 86px; padding: 10px 10px 9px; border-radius: 10px; text-align: center; }
+      .presets button:hover { transform: translateY(-2px); box-shadow: 0 8px 18px -12px rgba(20,24,20,.5); }
+      .presets button[aria-pressed="true"] { box-shadow: 0 8px 18px -10px var(--accent); }
+      .mini { display: grid; gap: 2px; width: 34px; height: 24px; margin: 0 auto 6px; }
+      .mini i { background: currentColor; opacity: .38; border-radius: 2px; display: block; }
+      .presets button[aria-pressed="true"] .mini i { opacity: .85; }
+
+      /* 切片浮現 */
+      @keyframes tileIn { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: none; } }
+      .tile-cell { animation: tileIn .45s var(--ease) both; cursor: pointer; }
+      .tile-cell:hover canvas { filter: brightness(1.05); }
+      .tile-cell::after { content: "↓"; position: absolute; right: 4px; bottom: 4px; font-size: 13px; line-height: 1; background: rgba(0,0,0,.62); color: #fff; padding: 4px 7px; border-radius: 4px; opacity: 0; transform: translateY(3px); transition: all .18s var(--ease); pointer-events: none; }
+      .tile-cell:hover::after, .tile-cell:focus-visible::after { opacity: 1; transform: none; }
+      .tile-cell:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+      /* 判定動效 */
+      @keyframes popIn { 0% { transform: scale(.7); opacity: 0; } 60% { transform: scale(1.12); } 100% { transform: scale(1); opacity: 1; } }
+      .verdict.pop { animation: popIn .38s var(--spring); }
+      .check { transition: border-color .3s, box-shadow .3s; }
+      .check.is-pass { border-color: color-mix(in srgb, var(--pass) 45%, var(--line)); }
+      .check.is-fail { border-color: color-mix(in srgb, var(--fail) 45%, var(--line)); }
+
+      /* 整體判定橫幅 */
+      .overall { display: flex; gap: 14px; align-items: center; border-radius: 12px; padding: 16px; margin-bottom: 14px; border: 1.5px solid var(--line); background: var(--surface-2); transition: all .3s var(--ease); }
+      .overall .big-ic { width: 46px; height: 46px; border-radius: 50%; flex: none; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 800; background: var(--surface); border: 1.5px solid var(--line); color: var(--ink-2); }
+      .overall .t1 { font-size: 17px; font-weight: 800; line-height: 1.3; }
+      .overall .t2 { font-size: 13px; color: var(--ink-2); }
+      .overall.pass { background: var(--pass-bg); border-color: var(--pass); }
+      .overall.pass .big-ic { background: var(--pass); border-color: var(--pass); color: #fff; animation: popIn .45s var(--spring); }
+      .overall.fail { background: var(--fail-bg); border-color: var(--fail); }
+      .overall.fail .big-ic { background: var(--fail); border-color: var(--fail); color: #fff; }
+      .overall.running .big-ic { animation: spinPulse 1s linear infinite; }
+      @keyframes spinPulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(.86); opacity: .6; } 100% { transform: scale(1); opacity: 1; } }
+
+      /* 對比滑桿 */
+      .slider-row { display: none; align-items: center; gap: 10px; margin: 10px 0 0; font-size: 13px; color: var(--ink-2); }
+      .slider-row.on { display: flex; }
+      .slider-row input[type="range"] { flex: 1; accent-color: var(--accent); min-height: 2.25rem; }
+      .compare-stage { cursor: ew-resize; touch-action: none; }
+      .compare-stage .divider { position: absolute; top: 0; bottom: 0; width: 2px; background: #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.35), 0 0 14px rgba(0,0,0,.35); z-index: 3; display: none; pointer-events: none; }
+      .compare-stage .divider::after { content: "◂ ▸"; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); background: #111; color: #fff; font-size: 11px; letter-spacing: 1px; padding: 5px 7px; border-radius: 999px; white-space: nowrap; }
+      .compare-stage.sliding .divider { display: block; }
+      .stage-label.r { left: auto; right: 8px; }
+
+      /* 進度與提示 */
+      progress { appearance: none; }
+      progress::-webkit-progress-bar { background: var(--surface-2); border-radius: 99px; }
+      progress::-webkit-progress-value { background: var(--accent); border-radius: 99px; transition: width .2s; }
+      .toast-wrap { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); z-index: 99; display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; width: max-content; max-width: calc(100vw - 32px); }
+      .toast { background: var(--ink); color: var(--bg); font-size: 14px; font-weight: 600; padding: 10px 16px; border-radius: 10px; box-shadow: 0 14px 34px -12px rgba(0,0,0,.5); animation: toastIn .3s var(--spring); text-align: center; }
+      .toast.out { opacity: 0; transform: translateY(6px); transition: all .25s; }
+      @keyframes toastIn { from { opacity: 0; transform: translateY(10px) scale(.96); } to { opacity: 1; transform: none; } }
+      .quickbar { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+      .img-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; align-items: center; }
+      .hint-card { display: flex; gap: 10px; background: var(--accent-soft); border-radius: 10px; padding: 11px 13px; font-size: 13.5px; margin-top: 12px; line-height: 1.5; }
+      .hint-card b { white-space: nowrap; }
+      /* 導出格式 */
+      .export-panel { border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin-top: 14px; background: var(--surface); }
+      .export-panel .ep-head { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+      .export-panel .ep-title { font-weight:700; font-size:14.5px; }
+      .export-panel .ep-total { font-family: var(--mono); font-size:13px; color: var(--ink-2); }
+      .export-panel .ep-total b { color: var(--ink); }
+      .format-seg { display:flex; flex-wrap:wrap; gap:0; margin-top:10px; }
+      .format-seg button { min-width:108px; padding:8px 12px; line-height:1.25; }
+      .format-seg button .fsub { display:block; font-size:11px; opacity:.75; font-weight:400; font-family: var(--mono); }
+      .format-seg button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight:700; }
+      .quality-row { display:none; align-items:center; gap:12px; margin-top:12px; flex-wrap:wrap; font-size:13.5px; }
+      .quality-row.on { display:flex; }
+      .quality-row input[type="range"] { flex:1; min-width:140px; accent-color: var(--accent); min-height:2.25rem; }
+      .quality-row .qv { font-family: var(--mono); font-weight:700; min-width:42px; text-align:right; }
+      .size-explain { margin-top:12px; border-top:1px solid var(--line); padding-top:10px; }
+      .size-explain summary { cursor:pointer; font-weight:600; font-size:13.5px; }
+      .size-explain ul { margin:8px 0 0; padding-left:18px; color: var(--ink-2); font-size:13.5px; line-height:1.6; }
+      .size-explain ul b { color: var(--ink); }
+
+      /* ================= v3 · 现代优雅 + 语言切换 ================= */
+      :root{
+        --bg:#f7f7f4; --surface:#ffffff; --surface-2:#f0f0ec; --ink:#141613; --ink-2:#6b716a;
+        --line:#e3e3dc; --accent:#173f35; --accent-ink:#f4f7f5; --accent-soft:#e8efec;
+        --pass:#1f7a3d; --pass-bg:#e9f4ec; --fail:#b42318; --fail-bg:#fbeae8;
+        --serif:"Songti SC","STSong","Noto Serif SC","Noto Serif TC",Georgia,serif;
+        --sans:"PingFang SC","PingFang TC","Microsoft YaHei","Microsoft JhengHei","Noto Sans SC","Noto Sans TC",system-ui,sans-serif;
+        --radius:20px;
+      }
+      @media (prefers-color-scheme: dark){
+        :root{ --bg:#0f1110; --surface:#171918; --surface-2:#202322; --ink:#eceeeb; --ink-2:#9aa39c; --line:#2b2f2c; --accent:#a8c3b8; --accent-ink:#0f1f19; --accent-soft:#1d2b26; --pass-bg:#16281c; --fail-bg:#331c1a; }
+      }
+      body{ font-family:var(--sans); background:var(--bg); letter-spacing:.01em; }
+      .wrap{ max-width:1060px; padding:36px 20px 80px; }
+      .topbar{ display:flex; align-items:flex-start; justify-content:space-between; gap:20px; flex-wrap:wrap; margin-bottom:8px; }
+      .topbar .title-block{ flex:1; min-width:240px; }
+      h1{ font-family:var(--serif); font-size:36px; font-weight:600; letter-spacing:.02em; line-height:1.15; margin:0 0 10px; }
+      .lede{ font-size:15px; line-height:1.75; color:var(--ink-2); max-width:38em; margin:0; font-weight:400; }
+      .lang-switch{ display:inline-flex; background:var(--surface); border:1px solid var(--line); border-radius:999px; padding:3px; gap:2px; flex:none; box-shadow:0 2px 10px rgba(20,22,20,.05); }
+      .lang-switch button{ border:none; background:transparent; border-radius:999px; padding:6px 13px; font-size:13px; min-height:2rem; color:var(--ink-2); font-weight:500; }
+      .lang-switch button[aria-pressed="true"]{ background:var(--ink); color:var(--bg); font-weight:600; }
+      section.card{ border-radius:var(--radius); border-color:var(--line); padding:26px; margin-bottom:18px; box-shadow:0 1px 3px rgba(20,22,20,.03),0 16px 40px -28px rgba(20,22,20,.22); }
+      h2{ font-family:var(--serif); font-size:19px; font-weight:600; letter-spacing:.02em; }
+      h2 .step{ background:transparent; color:var(--ink-2); border:1px solid var(--line); font-family:var(--mono); width:24px; height:24px; font-size:11px; }
+      .stepper{ border-radius:999px; padding:10px 18px; top:12px; border-color:var(--line); box-shadow:0 12px 32px -20px rgba(20,22,20,.28); }
+      .stepper .dot{ width:26px; height:26px; font-size:12px; }
+      .stepper .stp:not(:last-child)::after{ top:13px; }
+      button{ border-radius:999px; padding:7px 16px; font-weight:500; }
+      button.primary{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); box-shadow:none; letter-spacing:.02em; }
+      button.seg{ border-radius:0; } button.seg:first-child{ border-radius:999px 0 0 999px; } button.seg:last-child{ border-radius:0 999px 999px 0; }
+      .presets button{ border-radius:14px; padding:12px 10px 10px; }
+      .presets button[aria-pressed="true"]{ background:var(--accent); border-color:var(--accent); }
+      .dropzone{ border-radius:16px; border:1px dashed #c9cdc6; padding:48px 20px; background:linear-gradient(180deg,var(--surface),var(--surface-2)); }
+      .dropzone .big{ font-family:var(--serif); font-size:19px; font-weight:600; }
+      .chip{ border-radius:999px; padding:5px 11px; background:var(--surface-2); }
+      .check{ border-radius:16px; padding:18px 20px; }
+      .overall{ border-radius:16px; }
+      .export-panel{ border-radius:16px; padding:18px 20px; background:var(--surface-2); border-color:transparent; }
+      .format-seg{ gap:8px; } .format-seg button{ border-radius:999px !important; min-width:104px; }
+      .format-seg button[aria-pressed="true"]{ background:var(--accent); border-color:var(--accent); }
+      .preview-box,.tiles-frame,.compare-stage{ border-radius:14px; }
+      input[type="number"],select{ border-radius:999px; padding:6px 12px; }
+      .tile-table th{ letter-spacing:.04em; }
+      footer{ text-align:center; line-height:1.7; }
+      @media (max-width:560px){ h1{ font-size:29px; } section.card{ padding:20px 16px; } .topbar{ flex-direction:column; } }
+    </style>
+    <style>
+      /* ================= v4 · TESSELLA — 大膽重設計 ================= */
+      :root{
+        --bg:#e9ebe4; --surface:#fdfdf9; --surface-2:#e0e3d8; --ink:#101208; --ink-2:#5b5f52;
+        --line:#c6c9ba; --accent:#ff4a1c; --accent-ink:#ffffff; --accent-soft:#ffe0d3;
+        --pass:#0c8a44; --pass-bg:#dcf2e2; --fail:#d92d20; --fail-bg:#fbe2de;
+        --warn:#b45309; --warn-bg:#fdf0dd;
+        --checker-a:#ffffff; --checker-b:#d6d8cc;
+        --hard:#101208; --grid-line:rgba(16,18,8,.06);
+        --sans:"Archivo","PingFang SC","PingFang TC","Microsoft YaHei","Microsoft JhengHei","Noto Sans SC","Noto Sans TC",system-ui,sans-serif;
+        --mono:"JetBrains Mono",ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
+        --radius:14px;
+      }
+      @media (prefers-color-scheme: dark){
+        :root{
+          --bg:#0a0b08; --surface:#141510; --surface-2:#1e2019; --ink:#f1f2e9; --ink-2:#9ba08d;
+          --line:#2d2f26; --accent:#ff5a26; --accent-ink:#ffffff; --accent-soft:#3a1d0f;
+          --pass:#3ecf74; --pass-bg:#122a1a; --fail:#ff6b5e; --fail-bg:#331512;
+          --checker-a:#26281f; --checker-b:#16170f;
+          --hard:#000000; --grid-line:rgba(241,242,233,.055);
+        }
+      }
+      ::selection{ background:var(--accent); color:#fff; }
+      body{
+        font-family:var(--sans);
+        background-color:var(--bg);
+        background-image:linear-gradient(var(--grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--grid-line) 1px,transparent 1px);
+        background-size:44px 44px;
+      }
+      .wrap{ max-width:1140px; padding:44px 20px 84px; }
+
+      /* 頁首 */
+      .topbar{ align-items:flex-end; border-bottom:2px solid var(--ink); padding-bottom:24px; margin-bottom:22px; }
+      h1{ font-family:var(--sans); font-size:clamp(38px,6.5vw,60px); font-weight:900; letter-spacing:-.02em; line-height:1.02; margin:0 0 12px; }
+      .lede{ font-size:15.5px; line-height:1.7; max-width:40em; }
+      .lang-switch{ background:var(--surface); border:1.5px solid var(--ink); border-radius:10px; padding:3px; box-shadow:3px 3px 0 var(--hard); }
+      .lang-switch button{ border-radius:7px; padding:6px 13px; font-weight:700; color:var(--ink-2); }
+      .lang-switch button[aria-pressed="true"]{ background:var(--ink); color:var(--bg); }
+
+      /* 步驟條 */
+      .stepper{ border-radius:12px; border:1.5px solid var(--ink); background:var(--surface); box-shadow:4px 4px 0 var(--hard); padding:12px 18px; top:12px; }
+      .stepper .dot{ width:28px; height:28px; border-radius:8px; border:1.5px solid var(--ink); background:var(--surface); color:var(--ink-2); font-family:var(--sans); font-weight:800; font-size:13px; box-shadow:none; }
+      .stepper .stp:not(:last-child)::after{ top:14px; background:var(--line); }
+      .stepper .stp.done:not(:last-child)::after{ background:var(--ink); }
+      .stepper .stp.active .dot{ border-color:var(--accent); background:var(--accent); color:#fff; box-shadow:3px 3px 0 var(--hard); animation:none; }
+      .stepper .stp.active .lbl{ color:var(--accent); font-weight:800; }
+      .stepper .stp.done .dot{ border-color:var(--ink); background:var(--ink); color:var(--bg); }
+      .stepper .lbl{ font-weight:700; letter-spacing:.02em; }
+
+      /* 卡片與標題 */
+      section.card{ border-radius:var(--radius); border:1.5px solid var(--ink); padding:28px; margin-bottom:22px; box-shadow:7px 7px 0 var(--hard); background:var(--surface); }
+      h2{ font-family:var(--sans); font-size:21px; font-weight:800; letter-spacing:-.01em; gap:12px; }
+      h2 .step{ background:transparent; border:none; border-radius:0; color:var(--accent); font-family:var(--sans); font-size:32px; font-weight:900; width:auto; height:auto; line-height:1; }
+
+      /* 按鈕 */
+      button{ border-radius:10px; border:1.5px solid var(--ink); background:var(--surface); color:var(--ink); font-weight:700; padding:8px 18px; }
+      button:hover{ border-color:var(--ink); transform:translateY(-1px); box-shadow:3px 3px 0 var(--hard); }
+      button:active{ transform:translate(1px,1px); box-shadow:1px 1px 0 var(--hard); }
+      button.primary{ background:var(--accent); border-color:var(--ink); color:#fff; box-shadow:3px 3px 0 var(--hard); letter-spacing:.02em; }
+      button.primary:hover{ box-shadow:4px 4px 0 var(--hard); filter:none; }
+      button.seg{ border-radius:0; } button.seg:first-child{ border-radius:10px 0 0 10px; } button.seg:last-child{ border-radius:0 10px 10px 0; }
+      button.seg[aria-pressed="true"]{ background:var(--ink); border-color:var(--ink); color:var(--bg); }
+      button:focus-visible, select:focus-visible, input:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+      /* 拖放區 */
+      .dropzone{ border:2px dashed var(--ink); border-radius:14px; padding:54px 20px; background-color:var(--surface); background-image:linear-gradient(var(--grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--grid-line) 1px,transparent 1px); background-size:22px 22px; }
+      .dropzone::before{ background:radial-gradient(420px 160px at 50% 0%,var(--accent-soft),transparent 70%); }
+      .dropzone:hover, .dropzone:focus-visible{ border-color:var(--accent); }
+      .dropzone.drag{ border-color:var(--accent); background-color:var(--accent-soft); }
+      .dropzone svg{ color:var(--accent); }
+      .dropzone .big{ font-family:var(--sans); font-size:24px; font-weight:900; letter-spacing:-.01em; }
+      kbd{ border:1px solid var(--ink-2); border-bottom-width:2px; border-radius:4px; background:var(--surface); }
+      .page-drag{ border:2.5px dashed var(--accent); border-radius:14px; color:var(--accent); font-weight:900; letter-spacing:.02em; }
+
+      /* 元資料 chips */
+      .chip{ border-radius:6px; border:1px solid var(--line); background:var(--surface-2); font-family:var(--mono); }
+      .chip b{ color:var(--accent); }
+
+      /* 切法 */
+      .field-label{ font-family:var(--mono); font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-2); font-weight:700; }
+      .presets{ gap:10px; }
+      .presets button{ border-radius:12px; border:1.5px solid var(--ink); min-width:92px; padding:14px 10px 12px; font-size:16px; font-weight:800; background:var(--surface); }
+      .presets button:hover{ transform:translateY(-2px); box-shadow:4px 4px 0 var(--hard); }
+      .presets button[aria-pressed="true"]{ background:var(--accent); border-color:var(--ink); color:#fff; box-shadow:4px 4px 0 var(--hard); }
+      .presets button .sub{ font-family:var(--mono); }
+      .mini{ width:40px; height:28px; gap:2.5px; margin-bottom:8px; }
+      .mini i{ border-radius:2px; }
+      input[type="number"], select{ border-radius:8px; border:1.5px solid var(--ink); background:var(--surface); font-weight:700; }
+      .toggle-line input{ accent-color:var(--accent); }
+
+      /* 預覽 / 切片 / 對比框 */
+      .preview-box, .tiles-frame, .compare-stage{ border:1.5px solid var(--ink); border-radius:10px; }
+      .tile-tag{ background:var(--accent); border-radius:4px; font-weight:700; }
+      .tile-cell::after{ background:var(--ink); border-radius:4px; }
+      .tile-cell:focus-visible{ outline:2px solid var(--accent); }
+      .hint-card{ background:var(--accent-soft); border:1.5px dashed var(--accent); border-radius:10px; }
+
+      /* 驗證 */
+      .verdict{ border-radius:6px; font-family:var(--mono); letter-spacing:.03em; }
+      .check{ border-radius:12px; border:1.5px solid var(--line); padding:18px 20px; }
+      .check.is-pass{ border-color:var(--pass); }
+      .check.is-fail{ border-color:var(--fail); }
+      .metric .v{ font-family:var(--mono); }
+      .overall{ border-radius:12px; border:1.5px solid var(--ink); background:var(--surface-2); }
+      .overall .big-ic{ border-radius:10px; border:1.5px solid var(--ink); background:var(--surface); color:var(--accent); font-weight:900; }
+      .overall.pass{ background:var(--pass); border-color:var(--ink); color:#fff; }
+      .overall.pass .t2{ color:rgba(255,255,255,.85); }
+      .overall.pass .big-ic{ background:#fff; border-color:transparent; color:var(--pass); }
+      .overall.fail{ background:var(--fail); border-color:var(--ink); color:#fff; }
+      .overall.fail .t2{ color:rgba(255,255,255,.85); }
+      .overall.fail .big-ic{ background:#fff; border-color:transparent; color:var(--fail); }
+      progress::-webkit-progress-value{ background:var(--accent); }
+
+      /* 導出面板：反白黑面板 */
+      .export-panel{ background:var(--ink); color:var(--bg); border:1.5px solid var(--ink); border-radius:14px; padding:20px 22px; --ink-2:#a9aea0; --line:#3c4036; --surface:#22241d; }
+      .export-panel .ep-total{ color:var(--ink-2); }
+      .export-panel .ep-total b{ color:var(--bg); }
+      .export-panel button{ color:var(--bg); border-color:#4a4e42; background:transparent; box-shadow:none; }
+      .export-panel button:hover{ box-shadow:none; border-color:var(--bg); }
+      .export-panel .format-seg{ gap:8px; }
+      .export-panel .format-seg button{ border-radius:10px !important; }
+      .export-panel .format-seg button[aria-pressed="true"]{ background:var(--accent); border-color:var(--accent); color:#fff; }
+      .export-panel .size-explain{ border-top-color:var(--line); }
+      .export-panel .size-explain ul{ color:var(--ink-2); }
+      .export-panel .size-explain ul b{ color:var(--bg); }
+      .export-panel .quality-row input[type="range"]{ accent-color:var(--accent); }
+
+      /* 表格 / 其他 */
+      .tile-table th{ font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; }
+      .toast{ background:var(--ink); color:var(--bg); border-radius:10px; font-weight:800; }
+      footer{ font-family:var(--mono); font-size:12px; text-align:center; }
+      @media (max-width:560px){
+        h1{ font-size:34px; }
+        section.card{ padding:20px 16px; box-shadow:4px 4px 0 var(--hard); }
+        .dropzone{ padding:40px 14px; }
+        .dropzone .big{ font-size:20px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="topbar">
+        <div class="title-block">
+          <h1 data-i18n="title">Tessella</h1>
+          <p class="lede" data-i18n="lede">导入一张图片，选择切法将其切成多块；工具会把切片按原坐标拼回并逐像素比对，同时测量并排时的接缝，确认切图无遗漏、无位移、完美贴合。</p>
+        </div>
+        <div class="lang-switch" id="lang-switch" role="group" aria-label="Language">
+          <button type="button" data-lang="zh-Hans" aria-pressed="true">简体中文</button>
+          <button type="button" data-lang="zh-Hant" aria-pressed="false">繁體中文</button>
+          <button type="button" data-lang="en" aria-pressed="false">English</button>
+        </div>
+      </div>
+
+      <nav class="stepper" id="stepper" aria-label="Progress">
+        <div class="stp active" data-stp="1"><span class="dot">1</span><span class="lbl" data-i18n="step1">导入图片</span></div>
+        <div class="stp" data-stp="2"><span class="dot">2</span><span class="lbl" data-i18n="step2">选择切法</span></div>
+        <div class="stp" data-stp="3"><span class="dot">3</span><span class="lbl" data-i18n="step3">切片结果</span></div>
+        <div class="stp" data-stp="4"><span class="dot">4</span><span class="lbl" data-i18n="step4">验证结果</span></div>
+      </nav>
+
+      <!-- 1. 匯入 -->
+      <section class="card" id="sec-import">
+        <h2><span class="step">1</span><span data-i18n="step1">导入图片</span></h2>
+        <div class="dropzone" id="dropzone" role="button" tabindex="0" aria-label="Choose or drop an image">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg>
+          <div class="big" data-i18n="dropBig">点此选择图片，或把图片拖进来</div>
+          <div class="small" data-i18n="dropSmall">支持 PNG / JPEG / WebP / GIF（取第一帧），也可以直接粘贴剪贴板里的图片。所有处理都在本机进行，图片不会上传。</div>
+          <div class="keys"><span data-i18n="dropKeys">快捷操作：</span><kbd>Ctrl</kbd>+<kbd>V</kbd> <span data-i18n="dropKeys2">粘贴图片 · 把文件拖到页面任意位置也可以</span></div>
+          <div class="dz-actions">
+            <button type="button" class="primary" id="btn-pick" data-i18n="pick">选择文件</button>
+            <button type="button" id="btn-sample" data-i18n="sample">用内置测试图</button>
+          </div>
+        </div>
+        <input type="file" id="file-input" accept="image/*" class="hidden" />
+        <div class="err hidden" id="load-error" role="alert"></div>
+        <div id="orig-block" class="hidden">
+          <div class="chips" id="meta-chips"></div>
+          <div style="height:12px"></div>
+          <div class="preview-box checker orig-wrap">
+            <canvas id="orig-canvas"></canvas>
+            <canvas id="grid-canvas" class="overlay-grid hidden"></canvas>
+          </div>
+          <label class="toggle-line"><input type="checkbox" id="chk-grid" checked /><span data-i18n="showGrid">在原图上显示切割线</span></label>
+          <div class="img-actions">
+            <button type="button" id="btn-replace" data-i18n="replace">换一张图</button>
+            <button type="button" id="btn-sample2" data-i18n="sample2">改用内置测试图</button>
+            <span class="gap-note" data-i18n="replaceNote">换图后会沿用当前切法重新切图与验证。</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. 切圖設定 -->
+      <section class="card hidden" id="sec-settings">
+        <h2><span class="step">2</span><span data-i18n="step2">选择切法</span></h2>
+        <div class="controls-grid">
+          <div>
+            <div class="field-label" data-i18n="commonCuts">常用切法（列 × 行）</div>
+            <div class="presets" id="presets">
+              <button type="button" data-cols="2" data-rows="1"><span data-i18n="p2">二等分</span><span class="sub">2 × 1</span></button>
+              <button type="button" data-cols="3" data-rows="1"><span data-i18n="p3">三等分</span><span class="sub">3 × 1</span></button>
+              <button type="button" data-cols="2" data-rows="2"><span data-i18n="p4">四等分</span><span class="sub">2 × 2</span></button>
+              <button type="button" data-cols="3" data-rows="2"><span data-i18n="p6">六等分</span><span class="sub">3 × 2</span></button>
+              <button type="button" data-cols="2" data-rows="3"><span data-i18n="p6v">六等分（竖）</span><span class="sub">2 × 3</span></button>
+              <button type="button" data-cols="3" data-rows="3"><span data-i18n="p9">九等分</span><span class="sub">3 × 3</span></button>
+              <button type="button" data-cols="4" data-rows="3"><span data-i18n="p12">十二等分</span><span class="sub">4 × 3</span></button>
+              <button type="button" data-cols="4" data-rows="4"><span data-i18n="p16">十六等分</span><span class="sub">4 × 4</span></button>
+            </div>
+            <p class="hint" data-i18n="hintSplit">宽 / 高除不尽时，余下的像素会逐一分配给前几块（例如宽 1000 切三列 → 334 / 333 / 333），不取小数、不重叠、不留缝，这是能像素级拼回的前提。</p>
+          </div>
+          <div>
+            <div class="field-label" data-i18n="customCut">自定义切法</div>
+            <div class="custom-row">
+              <label><span data-i18n="colLabel">列</span> <input type="number" id="in-cols" min="1" max="16" value="2" /></label>
+              <span aria-hidden="true">×</span>
+              <label><span data-i18n="rowLabel">行</span> <input type="number" id="in-rows" min="1" max="16" value="2" /></label>
+              <button type="button" class="primary" id="btn-custom" data-i18n="applyCut">应用切图</button>
+            </div>
+            <p class="hint" data-i18n="hintCustom">列、行各 1–16。列或行为 1 时即是只往单一方向切。</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. 切片結果 -->
+      <section class="card hidden" id="sec-tiles">
+        <h2><span class="step">3</span><span data-i18n="step3">切片结果</span> <span class="mono" id="tiles-summary" style="font-size:13px;color:var(--ink-2);font-weight:400"></span></h2>
+        <div class="tiles-frame checker">
+          <div class="tiles-grid" id="tiles-grid"></div>
+        </div>
+        <p class="gap-note"><span data-i18n="tilesNote1">上图的切片以</span> <span class="mono">gap: 0</span> <span data-i18n="tilesNote2">并排渲染，编号为切片序号（由左至右、由上至下）。点任一切片即可直接下载该块。</span></p>
+        <div class="hint-card"><b data-i18n="seamGuideT">怎么看接缝？</b><span data-i18n="seamGuideB">先看这张并排图有没有错位或白线，再往下到「检查三」选一条接缝放大 10 倍检视——图案跨过接缝连续不断，就是贴合正确。</span></div>
+        <div class="export-panel" id="export-panel">
+          <div class="ep-head">
+            <span class="ep-title" data-i18n="exportTitle">导出格式</span>
+            <span class="ep-total" id="export-total">—</span>
+          </div>
+          <div class="format-seg" id="format-seg" role="group" aria-label="Export format">
+            <button type="button" data-format="image/png" aria-pressed="true">PNG<span class="fsub" data-i18n="fPng">无损 · 最大</span></button>
+            <button type="button" data-format="image/jpeg" aria-pressed="false">JPEG<span class="fsub" data-i18n="fJpeg">有损 · 最小</span></button>
+            <button type="button" data-format="image/webp" aria-pressed="false">WebP<span class="fsub" data-i18n="fWebp">有损 · 较小</span></button>
+          </div>
+          <div class="quality-row" id="quality-row">
+            <label for="quality-range" data-i18n="quality">画质</label>
+            <input type="range" id="quality-range" min="60" max="100" value="92" step="1" aria-label="Quality" />
+            <span class="qv" id="quality-val">92%</span>
+            <span style="color:var(--ink-2);font-size:12.5px" data-i18n="qualityNote">越高越清晰、文件越大；JPEG 不支持透明，会自动填白底。</span>
+          </div>
+          <p class="hint" id="format-hint" style="margin-top:10px"></p>
+          <details class="size-explain">
+            <summary data-i18n="whyTitle">为什么 39 MB 的原图，三等分后加起来只有 32 MB？</summary>
+            <ul>
+              <li data-i18n="why1"><b>不是丢了像素。</b>验证已逐像素比对，差异为 0。文件大小不等于像素数量，而是由编码方式决定的。</li>
+              <li data-i18n="why2"><b>浏览器重新编码更高效。</b>本工具用 Canvas 重新输出 PNG，压缩通常比原图编码器更紧，39 → 32 MB 约省 18%，属于正常的重压缩收益。</li>
+              <li data-i18n="why3"><b>附加数据被去掉了。</b>原图里的 EXIF、拍摄信息、ICC 色彩描述、内嵌缩略图等都不会带进切片。</li>
+              <li data-i18n="why4"><b>每块独立压缩。</b>每块切片各自建立压缩字典，总和本来就不会等于原图一次压完的大小；选 JPEG / WebP 还会再小很多，但那是有损压缩，像素值会变，不再适合像素级拼回。</li>
+            </ul>
+          </details>
+        </div>
+        <div class="tiles-actions">
+          <button type="button" class="primary" id="btn-download-all">下载全部切片（PNG）</button>
+          <span class="gap-note" id="download-note"></span>
+        </div>
+        <div style="height:14px"></div>
+        <table class="tile-table">
+          <thead>
+            <tr><th>#</th><th data-i18n="thPos">位置（列, 行）</th><th class="num" data-i18n="thXY">左上角 x, y</th><th class="num" data-i18n="thSize">尺寸 w × h</th><th></th></tr>
+          </thead>
+          <tbody id="tile-tbody"></tbody>
+        </table>
+      </section>
+
+      <!-- 4. 驗證 -->
+      <section class="card hidden" id="sec-verify">
+        <h2><span class="step">4</span><span data-i18n="step4">验证结果</span></h2>
+        <div class="overall" id="overall" role="status" aria-live="polite">
+          <span class="big-ic" id="overall-ic">…</span>
+          <div><div class="t1" id="overall-t1">等待验证</div><div class="t2" id="overall-t2">切图完成后会自动跑完三项检查，结果汇总在这里。</div></div>
+        </div>
+        <div id="verify-progress" class="hidden">
+          <p class="hint" id="progress-text" style="margin:0 0 6px">验证中…</p>
+          <progress id="progress-bar" max="100" value="0"></progress>
+          <div style="height:10px"></div>
+        </div>
+
+        <div class="check" id="check-cover">
+          <div class="check-head"><span class="name" data-i18n="check1">检查一 · 切片覆盖完整性</span><span class="verdict wait" data-verdict>待验证</span></div>
+          <p class="desc" data-i18n="check1d">每块切片的坐标与尺寸是否刚好铺满原图：不重叠、不留空、总面积相等。</p>
+          <div class="metrics" data-metrics></div>
+        </div>
+
+        <div class="check" id="check-pixel">
+          <div class="check-head"><span class="name" data-i18n="check2">检查二 · 像素级拼回比对</span><span class="verdict wait" data-verdict>待验证</span></div>
+          <p class="desc" data-i18n="check2d">把全部切片按原坐标画回一张空白画布，再与原图逐像素（RGBA 四通道）比对。</p>
+          <div class="metrics" data-metrics></div>
+          <div class="subtools">
+            <span class="segrow" role="group" aria-label="Compare view">
+              <button type="button" class="seg" data-view="orig" aria-pressed="false" data-i18n="viewOrig">原图</button>
+              <button type="button" class="seg" data-view="rebuilt" aria-pressed="true" data-i18n="viewRebuilt">拼回图</button>
+              <button type="button" class="seg" data-view="diff" aria-pressed="false" data-i18n="viewDiff">差异图</button>
+            </span>
+            <button type="button" id="btn-blink" aria-pressed="false" data-i18n="blink">闪烁对比（原图 ⇄ 拼回图）</button>
+            <button type="button" id="btn-slide" aria-pressed="false" data-i18n="slide">滑杆对比（拖拽）</button>
+          </div>
+          <div class="compare-stage checker" id="cmp-stage">
+            <canvas id="cmp-base"></canvas>
+            <canvas id="cmp-top" class="top hidden"></canvas>
+            <span class="divider" id="cmp-divider"></span>
+            <span class="stage-label" id="cmp-label">拼回图</span>
+            <span class="stage-label r hidden" id="cmp-label-r">原图</span>
+          </div>
+          <div class="slider-row" id="slider-row">
+            <span data-i18n="viewOrig">原图</span>
+            <input type="range" id="cmp-range" min="0" max="100" value="50" aria-label="Compare slider" />
+            <span data-i18n="viewRebuilt">拼回图</span>
+          </div>
+          <p class="hint" data-i18n="diffHint">差异图：黑色代表完全一致，有差异的像素以红色显示（差值已放大 8 倍方便肉眼看）。闪烁对比时若画面完全静止，代表两张图逐像素相同。</p>
+        </div>
+
+        <div class="check" id="check-seam">
+          <div class="check-head"><span class="name" data-i18n="check3">检查三 · 并排贴合与接缝</span><span class="verdict wait" data-verdict>待验证</span></div>
+          <p class="desc" data-i18n="check3d">测量上方并排渲染时相邻切片边界的实际间隙，并放大检视每条接缝两侧的像素是否连续对齐。</p>
+          <div class="metrics" data-metrics></div>
+          <div class="subtools">
+            <label><span data-i18n="viewSeam">检视接缝</span>
+              <select id="seam-select"></select>
+            </label>
+            <label class="toggle-line" style="min-height:36px"><input type="checkbox" id="chk-seamline" checked /><span data-i18n="markSeam">标示接缝位置</span></label>
+          </div>
+          <div class="seam-box"><canvas id="seam-canvas" width="640" height="160"></canvas></div>
+          <p class="hint" data-i18n="seamHint">放大图取自拼回图，显示接缝左右（或上下）各 16 像素、放大 10 倍。图案在接缝处连续不断裂，即代表并排贴合正确。</p>
+        </div>
+
+        <div class="tiles-actions">
+          <button type="button" id="btn-reverify" data-i18n="reverify">重新验证</button>
+        </div>
+      </section>
+
+      <footer data-i18n="footer">验证在你的浏览器本机以 Canvas 逐像素运算，大图（例如超过 2,000 万像素）会花几秒钟，进度条会显示进度。</footer>
+    </div>
+    <div class="page-drag" id="page-drag">松开鼠标，图片就会导入</div>
+    <div class="toast-wrap" id="toast-wrap" aria-live="polite"></div>
+
+    <script>
+      "use strict";
+      var $ = function (id) { return document.getElementById(id); };
+
+      /* ---------------- state ---------------- */
+      var state = {
+        srcCanvas: null,      // 原圖（自然尺寸）
+        srcName: "",
+        srcBytes: 0,
+        srcType: "",
+        cols: 2, rows: 2,
+        colW: [], rowH: [],   // 每欄寬 / 每列高
+        colX: [], rowY: [],   // 每欄 / 每列起始座標
+        tiles: [],            // {canvas,x,y,w,h,col,row,index}
+        rebuilt: null,        // 拼回圖 canvas
+        diffCanvas: null,     // 差異圖 canvas
+        verifyToken: 0,       // 取消舊的驗證流程
+        blinkTimer: null,
+        view: "rebuilt",
+        results: {},
+        slideMode: false,
+        slidePos: 50,
+        hasImage: false,
+        exportFormat: "image/png",
+        exportQuality: 0.92,
+        exportToken: 0,
+        lang: "zh-Hans"
+      };
+
+      var I18N = {
+        "zh-Hans": { title:"Tessella", lede:"导入一张图片，选择切法将其切成多块；工具会把切片按原坐标拼回并逐像素比对，同时测量并排时的接缝，确认切图无遗漏、无位移、完美贴合。", step1:"导入图片", step2:"选择切法", step3:"切片结果", step4:"验证结果", dropBig:"点此选择图片，或把图片拖进来", dropSmall:"支持 PNG / JPEG / WebP / GIF（取第一帧），也可以直接粘贴剪贴板里的图片。所有处理都在本机进行，图片不会上传。", dropKeys:"快捷操作：", dropKeys2:"粘贴图片 · 把文件拖到页面任意位置也可以", pick:"选择文件", sample:"用内置测试图", sample2:"改用内置测试图", showGrid:"在原图上显示切割线", replace:"换一张图", replaceNote:"换图后会沿用当前切法重新切图与验证。", commonCuts:"常用切法（列 × 行）", customCut:"自定义切法", colLabel:"列", rowLabel:"行", applyCut:"应用切图", hintSplit:"宽 / 高除不尽时，余下的像素会逐一分配给前几块（例如宽 1000 切三列 → 334 / 333 / 333），不取小数、不重叠、不留缝，这是能像素级拼回的前提。", hintCustom:"列、行各 1–16。列或行为 1 时即是只往单一方向切。", p2:"二等分", p3:"三等分", p4:"四等分", p6:"六等分", p6v:"六等分（竖）", p9:"九等分", p12:"十二等分", p16:"十六等分", tilesNote1:"上图的切片以", tilesNote2:"并排渲染，编号为切片序号（由左至右、由上至下）。点任一切片即可直接下载该块。", seamGuideT:"怎么看接缝？", seamGuideB:"先看这张并排图有没有错位或白线，再往下到「检查三」选一条接缝放大 10 倍检视——图案跨过接缝连续不断，就是贴合正确。", exportTitle:"导出格式", fPng:"无损 · 最大", fJpeg:"有损 · 最小", fWebp:"有损 · 较小", quality:"画质", qualityNote:"越高越清晰、文件越大；JPEG 不支持透明，会自动填白底。", whyTitle:"为什么 39 MB 的原图，三等分后加起来只有 32 MB？", why1:"不是丢了像素。验证已逐像素比对，差异为 0。文件大小不等于像素数量，而是由编码方式决定的。", why2:"浏览器重新编码更高效。本工具用 Canvas 重新输出 PNG，压缩通常比原图编码器更紧，39 → 32 MB 约省 18%，属于正常的重压缩收益。", why3:"附加数据被去掉了。原图里的 EXIF、拍摄信息、ICC 色彩描述、内嵌缩略图等都不会带进切片。", why4:"每块独立压缩。每块切片各自建立压缩字典，总和本来就不会等于原图一次压完的大小；选 JPEG / WebP 还会再小很多，但那是有损压缩，像素值会变，不再适合像素级拼回。", thPos:"位置（列, 行）", thXY:"左上角 x, y", thSize:"尺寸 w × h", check1:"检查一 · 切片覆盖完整性", check1d:"每块切片的坐标与尺寸是否刚好铺满原图：不重叠、不留空、总面积相等。", check2:"检查二 · 像素级拼回比对", check2d:"把全部切片按原坐标画回一张空白画布，再与原图逐像素（RGBA 四通道）比对。", check3:"检查三 · 并排贴合与接缝", check3d:"测量上方并排渲染时相邻切片边界的实际间隙，并放大检视每条接缝两侧的像素是否连续对齐。", viewOrig:"原图", viewRebuilt:"拼回图", viewDiff:"差异图", blink:"闪烁对比（原图 ⇄ 拼回图）", slide:"滑杆对比（拖拽）", diffHint:"差异图：黑色代表完全一致，有差异的像素以红色显示（差值已放大 8 倍方便肉眼看）。闪烁对比时若画面完全静止，代表两张图逐像素相同。", viewSeam:"检视接缝", markSeam:"标示接缝位置", seamHint:"放大图取自拼回图，显示接缝左右（或上下）各 16 像素、放大 10 倍。图案在接缝处连续不断裂，即代表并排贴合正确。", reverify:"重新验证", footer:"验证在你的浏览器本机以 Canvas 逐像素运算，大图（例如超过 2,000 万像素）会花几秒钟，进度条会显示进度。", pageDrag:"松开鼠标，图片就会导入", wait:"待验证", pass:"✓ 通过", fail:"✗ 未通过", passPixel:"✓ 通过 · 逐像素完全一致", failPixel:"✗ 未通过 · 有差异", file:"文件", size:"尺寸", totalPx:"总像素", bytes:"大小", format:"格式", orig:"原图", rebuilt:"拼回图", diffLabel:"差异图（红 = 有差异）", origLeft:"原图（左）", rebuiltRight:"拼回图（右）", blinkLabel:"拼回图（闪烁对比中）", origBlink:"原图（闪烁对比中）", clickDownload:"点击下载", download:"下载", estimating:"估算中…", hintPng:"PNG：无损编码，像素一模一样，最适合验证和后续拼图；文件也最大。", hintJpeg:"JPEG：有损编码，文件最小，不支持透明（自动填白底）；像素值会变，不适合像素级拼回验证。", hintWebp:"WebP：文件明显小于 PNG，支持透明；有损模式下像素值会变，无损需求请选 PNG。", sampleName:"内置测试图.png", pastedName:"粘贴的图片.png" },
+        "zh-Hant": { title:"Tessella", lede:"匯入一張圖片，選擇切法將其切成多塊；工具會把切片按原座標拼回並逐像素比對，同時量測並排時的接縫，確認切圖無遺漏、無位移、完美貼合。", step1:"匯入圖片", step2:"選擇切法", step3:"切片結果", step4:"驗證結果", dropBig:"點此選擇圖片，或把圖片拖進來", dropSmall:"支援 PNG / JPEG / WebP / GIF（取第一幀），也可以直接貼上剪貼簿裡的圖片。所有處理都在本機進行，圖片不會上傳。", dropKeys:"快捷操作：", dropKeys2:"貼上圖片 · 把檔案拖到頁面任意位置也可以", pick:"選擇檔案", sample:"用內建測試圖", sample2:"改用內建測試圖", showGrid:"在原圖上顯示切割線", replace:"換一張圖", replaceNote:"換圖後會沿用目前切法重新切圖與驗證。", commonCuts:"常用切法（欄 × 列）", customCut:"自訂切法", colLabel:"欄", rowLabel:"列", applyCut:"套用切圖", hintSplit:"寬／高除不盡時，餘下的像素會逐一分配給前幾塊（例如寬 1000 切三欄 → 334 / 333 / 333），不取小數、不重疊、不留縫，這是能像素級拼回的前提。", hintCustom:"欄、列各 1–16。欄或列為 1 時即是只往單一方向切。", p2:"二分", p3:"三分", p4:"四分", p6:"六分", p6v:"六分（直）", p9:"九分", p12:"十二分", p16:"十六分", tilesNote1:"上圖的切片以", tilesNote2:"並排渲染，編號為切片序號（由左至右、由上至下）。點任一切片即可直接下載該塊。", seamGuideT:"怎麼看接縫？", seamGuideB:"先看這張並排圖有沒有錯位或白線，再往下到「檢查三」選一條接縫放大 10 倍檢視——圖案跨過接縫連續不斷，就是貼合正確。", exportTitle:"導出格式", fPng:"無損 · 最大", fJpeg:"有損 · 最小", fWebp:"有損 · 較小", quality:"畫質", qualityNote:"越高越清晰、檔案越大；JPEG 不支援透明，會自動填白底。", whyTitle:"為什麼 39 MB 的原圖，三等分後加起來只有 32 MB？", why1:"不是丟了像素。驗證已逐像素比對，差異為 0。檔案大小不等於像素數量，而是由編碼方式決定的。", why2:"瀏覽器重新編碼更有效率。本工具用 Canvas 重新輸出 PNG，壓縮通常比原圖編碼器更緊，39 → 32 MB 約省 18%，屬於正常的重壓縮收益。", why3:"附加資料被去掉了。原圖裡的 EXIF、拍攝資訊、ICC 色彩描述、內嵌縮圖等都不會帶進切片。", why4:"每塊獨立壓縮。每塊切片各自建立壓縮字典，總和本來就不會等於原圖一次壓完的大小；選 JPEG / WebP 還會再小很多，但那是有損壓縮，像素值會變，不再適合像素級拼回。", thPos:"位置（欄, 列）", thXY:"左上角 x, y", thSize:"尺寸 w × h", check1:"檢查一 · 切片覆蓋完整性", check1d:"每塊切片的座標與尺寸是否剛好鋪滿原圖：不重疊、不留空、總面積相等。", check2:"檢查二 · 像素級拼回比對", check2d:"把全部切片按原座標畫回一張空白畫布，再與原圖逐像素（RGBA 四通道）比對。", check3:"檢查三 · 並排貼合與接縫", check3d:"量測上方並排渲染時相鄰切片邊界的實際間隙，並放大檢視每條接縫兩側的像素是否連續對齊。", viewOrig:"原圖", viewRebuilt:"拼回圖", viewDiff:"差異圖", blink:"閃爍對比（原圖 ⇄ 拼回圖）", slide:"滑桿對比（拖拽）", diffHint:"差異圖：黑色代表完全一致，有差異的像素以紅色顯示（差值已放大 8 倍方便肉眼看）。閃爍對比時若畫面完全靜止，代表兩張圖逐像素相同。", viewSeam:"檢視接縫", markSeam:"標示接縫位置", seamHint:"放大圖取自拼回圖，顯示接縫左右（或上下）各 16 像素、放大 10 倍。圖案在接縫處連續不斷裂，即代表並排貼合正確。", reverify:"重新驗證", footer:"驗證在你的瀏覽器本機以 Canvas 逐像素運算，大圖（例如超過 2,000 萬像素）會花幾秒鐘，進度條會顯示進度。", pageDrag:"放開滑鼠，圖片就會匯入", wait:"待驗證", pass:"✓ 通過", fail:"✗ 未通過", passPixel:"✓ 通過 · 逐像素完全一致", failPixel:"✗ 未通過 · 有差異", file:"檔案", size:"尺寸", totalPx:"總像素", bytes:"大小", format:"格式", orig:"原圖", rebuilt:"拼回圖", diffLabel:"差異圖（紅 = 有差異）", origLeft:"原圖（左）", rebuiltRight:"拼回圖（右）", blinkLabel:"拼回圖（閃爍對比中）", origBlink:"原圖（閃爍對比中）", clickDownload:"點擊下載", download:"下載", estimating:"估算中…", hintPng:"PNG：無損編碼，像素一模一樣，最適合驗證和後續拼圖；檔案也最大。", hintJpeg:"JPEG：有損編碼，檔案最小，不支援透明（自動填白底）；像素值會變，不適合像素級拼回驗證。", hintWebp:"WebP：檔案明顯小於 PNG，支援透明；有損模式下像素值會變，無損需求請選 PNG。", sampleName:"內建測試圖.png", pastedName:"貼上的圖片.png" },
+        "en": { title:"Tessella", lede:"Import an image, choose how to slice it, and the tool reassembles the tiles at their original coordinates for a pixel-by-pixel comparison — measuring every seam to confirm nothing is lost, shifted, or misaligned.", step1:"Import", step2:"Slice method", step3:"Tiles", step4:"Verification", dropBig:"Click to choose an image, or drop one here", dropSmall:"Supports PNG / JPEG / WebP / GIF (first frame). You can also paste from the clipboard. Everything runs locally — nothing is uploaded.", dropKeys:"Shortcut:", dropKeys2:"paste an image · or drop a file anywhere on the page", pick:"Choose file", sample:"Use built-in test image", sample2:"Switch to test image", showGrid:"Show cut lines on the original", replace:"Replace image", replaceNote:"The new image will be re-sliced and re-verified with the current method.", commonCuts:"Presets (columns × rows)", customCut:"Custom", colLabel:"Cols", rowLabel:"Rows", applyCut:"Apply", hintSplit:"When width or height does not divide evenly, the remainder is given one pixel at a time to the first tiles (e.g. width 1000 in 3 columns → 334 / 333 / 333) — no fractions, no overlap, no gaps. That is what makes a pixel-perfect rebuild possible.", hintCustom:"1–16 columns and rows. Use 1 for a single-direction cut.", p2:"Halves", p3:"Thirds", p4:"Quarters", p6:"Sixths", p6v:"Sixths (vertical)", p9:"Ninths", p12:"12 tiles", p16:"16 tiles", tilesNote1:"Tiles above are rendered with", tilesNote2:"side by side, numbered left to right, top to bottom. Click any tile to download it.", seamGuideT:"Reading the seams", seamGuideB:"First check the tiled view for offsets or white lines, then open Check 3 and zoom a seam 10× — if the pattern continues unbroken across it, the join is correct.", exportTitle:"Export format", fPng:"Lossless · Largest", fJpeg:"Lossy · Smallest", fWebp:"Lossy · Smaller", quality:"Quality", qualityNote:"Higher is sharper and larger. JPEG has no transparency, so tiles are flattened onto white.", whyTitle:"Why does a 39 MB original total only 32 MB after slicing into thirds?", why1:"No pixels are lost. Verification compares every pixel and finds zero difference. File size is not pixel count — it depends on the encoder.", why2:"The browser re-encodes more efficiently. Canvas PNG output (DEFLATE) is often tighter than the original encoder; 39 → 32 MB (~18% smaller) is a normal recompression gain.", why3:"Metadata is stripped. EXIF, camera info, ICC profiles and embedded thumbnails in the original are not carried into the tiles.", why4:"Each tile compresses independently, so the sum never equals a single whole-image encode. JPEG / WebP will be far smaller still, but they are lossy — pixel values change, so they are not suitable for pixel-perfect reassembly.", thPos:"Position (col, row)", thXY:"Top-left x, y", thSize:"Size w × h", check1:"Check 1 · Coverage", check1d:"Do the tiles exactly tile the original — no overlap, no gaps, equal total area?", check2:"Check 2 · Pixel-perfect rebuild", check2d:"All tiles are drawn back onto a blank canvas at their original coordinates and compared pixel by pixel (all RGBA channels).", check3:"Check 3 · Seams & alignment", check3d:"Measures the real gaps between neighbouring tiles as rendered, and zooms each seam to check pixel continuity.", viewOrig:"Original", viewRebuilt:"Rebuilt", viewDiff:"Difference", blink:"Blink compare (original ⇄ rebuilt)", slide:"Slider compare (drag)", diffHint:"Difference view: black means identical; differing pixels are shown in red (difference amplified 8×). If blink compare looks completely still, the two images are pixel-identical.", viewSeam:"Inspect seam", markSeam:"Mark seam position", seamHint:"Zoomed from the rebuilt image: 16 px on each side of the seam at 10×. An unbroken pattern across the seam means the join is correct.", reverify:"Re-verify", footer:"Verification runs locally in your browser with Canvas. Large images (over ~20 megapixels) may take a few seconds — watch the progress bar.", pageDrag:"Release to import the image", wait:"Pending", pass:"✓ Pass", fail:"✗ Fail", passPixel:"✓ Pass · Pixel-identical", failPixel:"✗ Fail · Differences found", file:"File", size:"Size", totalPx:"Pixels", bytes:"Bytes", format:"Format", orig:"Original", rebuilt:"Rebuilt", diffLabel:"Difference (red = differs)", origLeft:"Original (left)", rebuiltRight:"Rebuilt (right)", blinkLabel:"Rebuilt (blink compare)", origBlink:"Original (blink compare)", clickDownload:"Click to download", download:"Download", estimating:"Estimating…", hintPng:"PNG: lossless, pixel-identical — best for verification and reassembly; also the largest.", hintJpeg:"JPEG: lossy, smallest files, no transparency (flattened onto white). Pixel values change, so it is not suitable for pixel-perfect reassembly.", hintWebp:"WebP: much smaller than PNG with transparency support. In lossy mode pixel values change — choose PNG when you need lossless.", sampleName:"test-image.png", pastedName:"pasted-image.png" }
+      };
+      function t(k){ var d = I18N[state.lang] || I18N["zh-Hans"]; return d[k] || I18N["zh-Hans"][k] || k; }
+      function L(hans,hant,en){ return state.lang==="en"?en:state.lang==="zh-Hant"?hant:hans; }
+      function fmtBytes(n){ if(!n && n!==0) return "—"; if(n<1024) return n+" B"; if(n<1048576) return (n/1024).toFixed(1)+" KB"; return (n/1048576).toFixed(2)+" MB"; }
+      function extFor(fmt){ return fmt==="image/jpeg"?"jpg":fmt==="image/webp"?"webp":"png"; }
+      function labelFor(fmt){ return fmt==="image/jpeg"?"JPEG":fmt==="image/webp"?"WebP":"PNG"; }
+
+      /* ---------------- helpers ---------------- */
+      function fmt(n) { return n.toLocaleString("en-US"); }
+      function makeCanvas(w, h) { var c = document.createElement("canvas"); c.width = w; c.height = h; return c; }
+
+      /* ---------------- v2 helpers：提示 / 步驟 / 總結 ---------------- */
+      function toast(msg) {
+        var wrap = $("toast-wrap"); if (!wrap) return;
+        var t = document.createElement("div"); t.className = "toast"; t.textContent = msg;
+        wrap.appendChild(t);
+        setTimeout(function () { t.classList.add("out"); setTimeout(function () { t.remove(); }, 280); }, 2600);
+      }
+      function setStepper(stage) {
+        // stage: 1 匯入中 · 2 已匯入待切 · 3 已切 · 4 驗證完成
+        document.querySelectorAll("#stepper .stp").forEach(function (el) {
+          var n = parseInt(el.dataset.stp, 10);
+          el.classList.toggle("done", n < stage);
+          el.classList.toggle("active", n === stage);
+          el.querySelector(".dot").textContent = n < stage ? "✓" : String(n);
+        });
+      }
+      function setOverall(mode, t1, t2) {
+        var box = $("overall"); if (!box) return;
+        box.className = "overall" + (mode ? " " + mode : "");
+        $("overall-ic").textContent = mode === "pass" ? "✓" : mode === "fail" ? "✗" : mode === "running" ? "◌" : "…";
+        if (t1) $("overall-t1").textContent = t1;
+        if (t2) $("overall-t2").textContent = t2;
+      }
+      function finishOverall() {
+        var r = state.results || {};
+        var keys = ["cover", "pixel", "seam"];
+        var done = keys.filter(function (k) { return typeof r[k] === "boolean"; }).length;
+        if (done < 3) { setOverall("running", state.lang === "en" ? "Verifying…" : "验证进行中…", done + " / 3"); return; }
+        var passed = keys.filter(function (k) { return r[k]; }).length;
+        if (passed === 3) {
+          setOverall("pass", state.lang === "en" ? "All checks passed — pixel-perfect rebuild, zero seam gaps" : state.lang === "zh-Hant" ? "全部通過 — 切圖可像素級拼回、並排零間隙" : "全部通过 — 切图可像素级拼回、并排零间隙",
+            state.tiles.length + (state.lang === "en" ? " tiles · " : " 块切片 · ") + state.cols + " × " + state.rows + (state.lang === "en" ? " · 0 differing pixels · 0 px gaps" : " · 差异像素 0 · 接缝间隙 0px"));
+          toast(state.lang === "en" ? "✓ All checks passed" : "✓ 验证全部通过");
+        } else {
+          setOverall("fail", (3 - passed) + (state.lang === "en" ? " check(s) failed" : " 项未通过"), state.lang === "en" ? "See the highlighted checks below." : "请看下方标示的检查项目。");
+          toast(state.lang === "en" ? "Some checks failed" : "验证有项目未通过");
+        }
+        setStepper(4);
+        document.querySelectorAll("#stepper .stp").forEach(function (el) {
+          if (passed === 3) { el.classList.add("done"); el.classList.remove("active"); el.querySelector(".dot").textContent = "✓"; }
+        });
+      }
+
+      function splitSizes(total, n) {
+        var base = Math.floor(total / n), rem = total - base * n, out = [], acc = 0, offs = [];
+        for (var i = 0; i < n; i++) {
+          var s = base + (i < rem ? 1 : 0);
+          out.push(s); offs.push(acc); acc += s;
+        }
+        return { sizes: out, offsets: offs };
+      }
+
+      function setVerdict(checkId, kind, text) {
+        var el = document.querySelector("#" + checkId + " [data-verdict]");
+        el.className = "verdict " + kind + (kind === "pass" || kind === "fail" ? " pop" : "");
+        el.textContent = text;
+        var card = $(checkId);
+        card.classList.toggle("is-pass", kind === "pass");
+        card.classList.toggle("is-fail", kind === "fail");
+      }
+      function setMetrics(checkId, pairs) {
+        var box = document.querySelector("#" + checkId + " [data-metrics]");
+        box.innerHTML = "";
+        pairs.forEach(function (p) {
+          var d = document.createElement("div");
+          d.className = "metric";
+          var k = document.createElement("div"); k.className = "k"; k.textContent = p[0];
+          var v = document.createElement("div"); v.className = "v"; v.textContent = p[1];
+          d.appendChild(k); d.appendChild(v); box.appendChild(d);
+        });
+      }
+      function resetVerdicts() {
+        state.results = {};
+        ["check-cover", "check-pixel", "check-seam"].forEach(function (id) {
+          setVerdict(id, "wait", t("wait"));
+          setMetrics(id, []);
+        });
+        setOverall("", state.lang === "en" ? "Waiting for verification" : state.lang === "zh-Hant" ? "等待驗證" : "等待验证", state.lang === "en" ? "All three checks run automatically after slicing." : state.lang === "zh-Hant" ? "切圖完成後會自動跑完三項檢查，結果彙總在這裡。" : "切图完成后会自动跑完三项检查，结果汇总在这里。");
+      }
+
+      /* ---------------- image loading ---------------- */
+      function loadFromBlob(blob, name) {
+        var errBox = $("load-error");
+        errBox.classList.add("hidden");
+        var url = URL.createObjectURL(blob);
+        var img = new Image();
+        img.onload = function () {
+          var w = img.naturalWidth, h = img.naturalHeight;
+          var c = makeCanvas(w, h);
+          c.getContext("2d").drawImage(img, 0, 0);
+          URL.revokeObjectURL(url);
+          state.srcCanvas = c;
+          state.srcName = name || "image";
+          state.srcBytes = blob.size || 0;
+          state.srcType = blob.type || "";
+          onImageReady();
+        };
+        img.onerror = function () {
+          URL.revokeObjectURL(url);
+          errBox.textContent = state.lang === "en" ? "This image could not be read or is not supported. Try a PNG / JPEG / WebP file." : state.lang === "zh-Hant" ? "這張圖片讀不到或格式不支援，請換一張 PNG / JPEG / WebP 試試。" : "这张图片读不到或格式不支持，请换一张 PNG / JPEG / WebP 试试。";
+          errBox.classList.remove("hidden");
+        };
+        img.src = url;
+      }
+
+      function makeSampleImage() {
+        // 內建測試圖：斜線、圓、同心環、棋盤格、漸層與座標刻度——接縫錯位一眼可見
+        var W = 1200, H = 800, c = makeCanvas(W, H), x = c.getContext("2d");
+        var g = x.createLinearGradient(0, 0, W, H);
+        g.addColorStop(0, "#f6d365"); g.addColorStop(.5, "#7ec8a9"); g.addColorStop(1, "#5b8dd9");
+        x.fillStyle = g; x.fillRect(0, 0, W, H);
+        // 棋盤格（右上）
+        var s = 40;
+        for (var i = 0; i < 8; i++) for (var j = 0; j < 5; j++) {
+          x.fillStyle = (i + j) % 2 ? "rgba(0,0,0,.55)" : "rgba(255,255,255,.55)";
+          x.fillRect(W - 320 + i * s, j * s, s, s);
+        }
+        // 同心圓（左下）
+        for (var r = 150; r > 10; r -= 18) {
+          x.beginPath(); x.arc(230, 570, r, 0, Math.PI * 2);
+          x.fillStyle = (r / 18) % 2 ? "rgba(20,30,60,.5)" : "rgba(255,255,255,.5)"; x.fill();
+        }
+        // 斜線群（貫穿全圖，驗接縫連續性）
+        x.strokeStyle = "rgba(120,10,10,.85)"; x.lineWidth = 3;
+        for (var d = -H; d < W; d += 60) { x.beginPath(); x.moveTo(d, 0); x.lineTo(d + H, H); x.stroke(); }
+        x.strokeStyle = "rgba(10,10,120,.7)"; x.lineWidth = 1;
+        for (var d2 = 0; d2 < W + H; d2 += 23) { x.beginPath(); x.moveTo(d2, 0); x.lineTo(d2 - H, H); x.stroke(); }
+        // 十字準星（正中央）
+        x.strokeStyle = "#111"; x.lineWidth = 2;
+        x.beginPath(); x.moveTo(W / 2 - 90, H / 2); x.lineTo(W / 2 + 90, H / 2); x.stroke();
+        x.beginPath(); x.moveTo(W / 2, H / 2 - 90); x.lineTo(W / 2, H / 2 + 90); x.stroke();
+        x.beginPath(); x.arc(W / 2, H / 2, 46, 0, Math.PI * 2); x.stroke();
+        // 每 100px 刻度點
+        x.fillStyle = "rgba(0,0,0,.8)";
+        for (var px = 100; px < W; px += 100) for (var py = 100; py < H; py += 100) x.fillRect(px - 2, py - 2, 5, 5);
+        c.toBlob(function (b) { loadFromBlob(b, t("sampleName")); }, "image/png");
+      }
+
+      function onImageReady() {
+        var c = state.srcCanvas, W = c.width, H = c.height;
+        var oc = $("orig-canvas");
+        oc.width = W; oc.height = H;
+        oc.getContext("2d").drawImage(c, 0, 0);
+        onChipsOnly();
+        $("orig-block").classList.remove("hidden");
+        $("sec-settings").classList.remove("hidden");
+        markPreset(state.cols, state.rows);
+        var first = !state.hasImage;
+        state.hasImage = true;
+        setStepper(2);
+        toast((state.lang === "en" ? "Imported: " : "已导入：") + fmt(W) + " × " + fmt(H) + " px");
+        doCut(state.cols, state.rows);
+        if (first) setTimeout(function () { $("sec-settings").scrollIntoView({ behavior: "smooth", block: "start" }); }, 350);
+      }
+
+      /* ---------------- cutting ---------------- */
+      function markPreset(cols, rows) {
+        var btns = $("presets").querySelectorAll("button");
+        btns.forEach(function (b) {
+          var on = parseInt(b.dataset.cols, 10) === cols && parseInt(b.dataset.rows, 10) === rows;
+          b.setAttribute("aria-pressed", on ? "true" : "false");
+        });
+        $("in-cols").value = cols; $("in-rows").value = rows;
+      }
+
+      function doCut(cols, rows) {
+        if (!state.srcCanvas) return;
+        stopBlink();
+        state.cols = cols; state.rows = rows;
+        var src = state.srcCanvas, W = src.width, H = src.height;
+        var cw = splitSizes(W, cols), rh = splitSizes(H, rows);
+        state.colW = cw.sizes; state.colX = cw.offsets;
+        state.rowH = rh.sizes; state.rowY = rh.offsets;
+        state.tiles = [];
+        for (var r = 0; r < rows; r++) {
+          for (var q = 0; q < cols; q++) {
+            var w = cw.sizes[q], h = rh.sizes[r], x0 = cw.offsets[q], y0 = rh.offsets[r];
+            var tc = makeCanvas(w, h);
+            tc.getContext("2d").drawImage(src, x0, y0, w, h, 0, 0, w, h);
+            state.tiles.push({ canvas: tc, x: x0, y: y0, w: w, h: h, col: q, row: r, index: state.tiles.length + 1 });
+          }
+        }
+        renderTiles();
+        drawGridOverlay();
+        $("sec-tiles").classList.remove("hidden");
+        $("sec-verify").classList.remove("hidden");
+        $("tiles-summary").textContent = tilesSummaryText();
+        updateExportUI(true);
+        resetVerdicts();
+        runVerification();
+      }
+
+      function renderTiles() {
+        var grid = $("tiles-grid");
+        grid.innerHTML = "";
+        grid.style.gridTemplateColumns = "repeat(" + state.cols + ", 1fr)";
+        state.tiles.forEach(function (tile, i) {
+          var cell = document.createElement("div");
+          cell.className = "tile-cell";
+          cell.dataset.index = tile.index;
+          cell.style.animationDelay = Math.min(i * 45, 600) + "ms";
+          cell.setAttribute("role", "button");
+          cell.setAttribute("tabindex", "0");
+          cell.setAttribute("aria-label", t("download") + " #" + tile.index);
+          cell.setAttribute("title", t("clickDownload") + " #" + tile.index);
+          cell.addEventListener("click", function () { downloadTile(tile); toast(t("download") + " #" + tile.index + " · " + labelFor(state.exportFormat)); });
+          cell.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); downloadTile(tile); } });
+          cell.appendChild(tile.canvas);
+          var tag = document.createElement("span");
+          tag.className = "tile-tag";
+          tag.textContent = "#" + tile.index;
+          cell.appendChild(tag);
+          grid.appendChild(cell);
+        });
+        renderTilesTableOnly();
+      }
+
+      function drawGridOverlay() {
+        var gc = $("grid-canvas"), src = state.srcCanvas;
+        gc.width = src.width; gc.height = src.height;
+        var x = gc.getContext("2d");
+        x.clearRect(0, 0, gc.width, gc.height);
+        x.strokeStyle = "rgba(220,38,38,.9)";
+        x.lineWidth = Math.max(1, Math.round(src.width / 600));
+        x.setLineDash([10, 7]);
+        state.colX.slice(1).forEach(function (vx) {
+          x.beginPath(); x.moveTo(vx, 0); x.lineTo(vx, src.height); x.stroke();
+        });
+        state.rowY.slice(1).forEach(function (hy) {
+          x.beginPath(); x.moveTo(0, hy); x.lineTo(src.width, hy); x.stroke();
+        });
+        gc.classList.toggle("hidden", !$("chk-grid").checked);
+      }
+
+      /* ---------------- language ---------------- */
+      function applyLang(lang, rerender) {
+        state.lang = lang;
+        document.documentElement.lang = lang === "en" ? "en" : lang === "zh-Hant" ? "zh-Hant" : "zh-CN";
+        document.title = t("title");
+        document.querySelectorAll("[data-i18n]").forEach(function (el) { var k = el.getAttribute("data-i18n"); if (I18N[lang][k]) el.textContent = I18N[lang][k]; });
+        // why bullets contain <b> lead-ins in Hans/Hant source; for en keep plain text already set above
+        document.querySelectorAll("#lang-switch button").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.lang === lang ? "true" : "false"); });
+        var pd = $("page-drag"); if (pd) pd.textContent = t("pageDrag");
+        updateExportUI(false);
+        if (rerender && state.srcCanvas) {
+          // refresh dynamic, language-dependent labels without re-verifying pixels
+          onChipsOnly();
+          $("tiles-summary").textContent = tilesSummaryText();
+          renderTilesTableOnly();
+          if (state.results && typeof state.results.cover === "boolean") { /* verdict texts refreshed on next verify; keep numbers */ }
+          buildSeamOptions(); drawSeam();
+          showCompare(state.view);
+          estimateExport();
+        } else if (state.tiles.length) { estimateExport(); }
+      }
+      function tilesSummaryText() {
+        if (state.lang === "en") return " — " + state.tiles.length + " tiles (" + state.cols + " cols × " + state.rows + " rows)";
+        var c = state.lang === "zh-Hant" ? "欄" : "列", r = state.lang === "zh-Hant" ? "列" : "行";
+        return " — 共 " + state.tiles.length + " 块（" + state.cols + " " + c + " × " + state.rows + " " + r + "）";
+      }
+      function onChipsOnly() {
+        var c = state.srcCanvas; if (!c) return; var W = c.width, H = c.height;
+        var chips = [[t("file"), state.srcName],[t("size"), fmt(W) + " × " + fmt(H) + " px"],[t("totalPx"), fmt(W * H)]];
+        if (state.srcBytes) chips.push([t("bytes"), fmt(state.srcBytes) + " bytes · " + fmtBytes(state.srcBytes)]);
+        if (state.srcType) chips.push([t("format"), state.srcType.replace("image/", "").toUpperCase()]);
+        var mc = $("meta-chips"); mc.innerHTML = "";
+        chips.forEach(function (p) {
+          var s = document.createElement("span"); s.className = "chip";
+          s.appendChild(document.createTextNode(p[0] + " "));
+          var bEl = document.createElement("b"); bEl.textContent = p[1];
+          s.appendChild(bEl); mc.appendChild(s);
+        });
+      }
+      function renderTilesTableOnly() {
+        var tb = $("tile-tbody"); if (!tb) return; tb.innerHTML = "";
+        state.tiles.forEach(function (tile) {
+          var tr = document.createElement("tr");
+          var posTxt = state.lang === "en" ? "Col " + (tile.col + 1) + " · Row " + (tile.row + 1) : (state.lang === "zh-Hant" ? "欄 " : "列 ") + (tile.col + 1) + " · " + (state.lang === "zh-Hant" ? "列 " : "行 ") + (tile.row + 1);
+          var cells = [["#", "#" + tile.index, ""],[t("thPos"), posTxt, ""],[t("thXY"), fmt(tile.x) + ", " + fmt(tile.y), "num"],[t("thSize"), fmt(tile.w) + " × " + fmt(tile.h), "num"]];
+          cells.forEach(function (cd) { var td = document.createElement("td"); td.setAttribute("data-k", cd[0]); if (cd[2]) td.className = cd[2]; td.textContent = cd[1]; tr.appendChild(td); });
+          var tdBtn = document.createElement("td"); var b = document.createElement("button"); b.type = "button"; b.textContent = t("download") + " " + labelFor(state.exportFormat); b.addEventListener("click", function () { downloadTile(tile); }); tdBtn.appendChild(b); tr.appendChild(tdBtn); tb.appendChild(tr);
+        });
+        var da = $("btn-download-all"); if (da) da.textContent = (state.lang === "en" ? "Download all tiles (" : "下载全部切片（") + labelFor(state.exportFormat) + (state.lang === "en" ? ")" : "）");
+      }
+
+      /* ---------------- export ---------------- */
+      function tileToBlob(tile, cb) {
+        var fmt = state.exportFormat, q = state.exportQuality;
+        if (fmt === "image/jpeg") {
+          var flat = makeCanvas(tile.w, tile.h); var fx = flat.getContext("2d");
+          fx.fillStyle = "#ffffff"; fx.fillRect(0, 0, tile.w, tile.h); fx.drawImage(tile.canvas, 0, 0);
+          flat.toBlob(function (b) { cb(b); }, fmt, q); return;
+        }
+        if (fmt === "image/png") { tile.canvas.toBlob(function (b) { cb(b); }, fmt); return; }
+        tile.canvas.toBlob(function (b) { cb(b); }, fmt, q);
+      }
+      function updateExportUI(estimate) {
+        document.querySelectorAll("#format-seg button").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.format === state.exportFormat ? "true" : "false"); });
+        $("quality-row").classList.toggle("on", state.exportFormat !== "image/png");
+        $("quality-val").textContent = Math.round(state.exportQuality * 100) + "%";
+        $("format-hint").textContent = state.exportFormat === "image/png" ? t("hintPng") : state.exportFormat === "image/jpeg" ? t("hintJpeg") : t("hintWebp");
+        renderTilesTableOnly();
+        if (estimate !== false && state.tiles.length) estimateExport();
+        else if (!state.tiles.length) { $("export-total").textContent = state.srcBytes ? (t("orig") + " " + fmtBytes(state.srcBytes)) : "—"; }
+      }
+      function estimateExport() {
+        if (!state.tiles.length) return;
+        var token = ++state.exportToken;
+        $("export-total").textContent = t("estimating");
+        var total = 0, i = 0;
+        (function next() {
+          if (token !== state.exportToken) return;
+          if (i >= state.tiles.length) {
+            var origTxt = state.srcBytes ? t("file") + " " + fmtBytes(state.srcBytes) : "—";
+            var diffTxt = "";
+            if (state.srcBytes && total) { var pct = Math.round((total - state.srcBytes) / state.srcBytes * 100); diffTxt = " · " + (pct <= 0 ? pct + "%" : "+" + pct + "%"); }
+            $("export-total").innerHTML = "";
+            var span = document.createElement("span"); span.textContent = (state.lang === "en" ? "Original " : "原图 ") + origTxt.replace(t("file") + " ", "") + " → " + labelFor(state.exportFormat) + " " + fmtBytes(total) + diffTxt;
+            $("export-total").appendChild(span); return;
+          }
+          tileToBlob(state.tiles[i], function (b) { if (b) total += b.size; i++; next(); });
+        })();
+      }
+
+      /* ---------------- downloads ---------------- */
+      function tileFilename(tile) {
+        var base = state.srcName.replace(/\.[^.]+$/, "") || "image";
+        return base + "_tile-" + tile.index + "_x" + tile.x + "_y" + tile.y + "_" + tile.w + "x" + tile.h + "." + extFor(state.exportFormat);
+      }
+      function downloadTile(tile) {
+        tileToBlob(tile, function (b) {
+          if (!b) return;
+          var a = document.createElement("a");
+          a.href = URL.createObjectURL(b);
+          a.download = tileFilename(tile);
+          document.body.appendChild(a); a.click(); a.remove();
+          setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+        });
+      }
+      function downloadAll() {
+        var note = $("download-note");
+        var i = 0;
+        note.textContent = (state.lang==="en" ? "Downloading 0 / " : "下载中 0 / ") + state.tiles.length + "…";
+        (function next() {
+          if (i >= state.tiles.length) { note.textContent = state.lang==="en" ? "All " + state.tiles.length + " tiles sent to download." : "全部 " + state.tiles.length + " 块已送出下载。"; toast(note.textContent); return; }
+          downloadTile(state.tiles[i]);
+          i++;
+          note.textContent = (state.lang==="en" ? "Downloading " : "下载中 ") + i + " / " + state.tiles.length + "…";
+          setTimeout(next, 350);
+        })();
+      }
+
+      /* ---------------- verification ---------------- */
+      function verifyCoverage() {
+        var W = state.srcCanvas.width, H = state.srcCanvas.height;
+        var sumW = state.colW.reduce(function (a, b) { return a + b; }, 0);
+        var sumH = state.rowH.reduce(function (a, b) { return a + b; }, 0);
+        var areaTiles = state.tiles.reduce(function (a, t) { return a + t.w * t.h; }, 0);
+        // 逐塊檢查：座標連續（下一塊起點 = 上一塊終點）且不超出邊界
+        var continuous = true;
+        for (var q = 1; q < state.cols; q++) if (state.colX[q] !== state.colX[q - 1] + state.colW[q - 1]) continuous = false;
+        for (var r = 1; r < state.rows; r++) if (state.rowY[r] !== state.rowY[r - 1] + state.rowH[r - 1]) continuous = false;
+        var inBounds = state.tiles.every(function (t) { return t.x + t.w <= W && t.y + t.h <= H && t.w > 0 && t.h > 0; });
+        var pass = sumW === W && sumH === H && areaTiles === W * H && continuous && inBounds &&
+                   state.tiles.length === state.cols * state.rows;
+        state.results.cover = pass;
+        setVerdict("check-cover", pass ? "pass" : "fail", pass ? t("pass") : t("fail"));
+        setMetrics("check-cover", [
+          [L("切片数量","切片數量","Tiles"), fmt(state.tiles.length)],
+          [L("列宽总和","欄寬總和","Sum of column widths"), fmt(sumW) + " px / " + fmt(W)],
+          [L("行高总和","列高總和","Sum of row heights"), fmt(sumH) + " px / " + fmt(H)],
+          [L("切片总面积","切片總面積","Total tile area"), fmt(areaTiles) + " px²"],
+          [L("坐标连续无缝","座標連續無縫","Coordinates continuous"), continuous ? L("是","是","Yes") : L("否","否","No")],
+          [L("超出边界","超出邊界","Out of bounds"), inBounds ? "0" : L("有","有","Yes")]
+        ]);
+        return pass;
+      }
+
+      function buildRebuilt() {
+        var W = state.srcCanvas.width, H = state.srcCanvas.height;
+        var c = makeCanvas(W, H), x = c.getContext("2d");
+        state.tiles.forEach(function (t) { x.drawImage(t.canvas, t.x, t.y); });
+        return c;
+      }
+
+      // 逐列區塊比對（非同步，避免大圖卡住畫面）
+      function verifyPixels(token, done) {
+        var src = state.srcCanvas, W = src.width, H = src.height;
+        var a = src.getContext("2d").getImageData(0, 0, W, H).data;
+        var b = state.rebuilt.getContext("2d").getImageData(0, 0, W, H).data;
+        var diff = makeCanvas(W, H);
+        var dctx = diff.getContext("2d");
+        var dimg = dctx.createImageData(W, H);
+        var dd = dimg.data;
+        var diffPixels = 0, diffBytes = 0, maxDiff = 0, sumAbs = 0;
+        var y = 0, CHUNK = 160;
+        var bar = $("progress-bar"), txt = $("progress-text");
+        function step() {
+          if (token !== state.verifyToken) return;
+          var yEnd = Math.min(H, y + CHUNK);
+          for (; y < yEnd; y++) {
+            var rowOff = y * W * 4;
+            for (var px = 0; px < W; px++) {
+              var i = rowOff + px * 4;
+              var m = 0;
+              for (var ch = 0; ch < 4; ch++) {
+                var d = Math.abs(a[i + ch] - b[i + ch]);
+                if (d > 0) { diffBytes++; sumAbs += d; if (d > maxDiff) maxDiff = d; }
+                if (d > m) m = d;
+              }
+              if (m > 0) {
+                diffPixels++;
+                var v = Math.min(255, m * 8);
+                dd[i] = 255; dd[i + 1] = Math.max(0, 200 - v); dd[i + 2] = 40; dd[i + 3] = 255;
+              } else {
+                dd[i] = 12; dd[i + 1] = 12; dd[i + 2] = 12; dd[i + 3] = 255;
+              }
+            }
+          }
+          bar.value = Math.round(y / H * 100);
+          txt.textContent = (state.lang==="en" ? "Comparing… " : "逐像素比对中… ") + fmt(y) + " / " + fmt(H);
+          if (y < H) { setTimeout(step, 0); return; }
+          dctx.putImageData(dimg, 0, 0);
+          state.diffCanvas = diff;
+          var total = W * H;
+          var pass = diffPixels === 0;
+          state.results.pixel = pass;
+          setVerdict("check-pixel", pass ? "pass" : "fail", pass ? t("passPixel") : t("failPixel"));
+          setMetrics("check-pixel", [
+            [L("比对像素总数","比對像素總數","Pixels compared"), fmt(total)],
+            [L("差异像素","差異像素","Differing pixels"), fmt(diffPixels) + " (" + (diffPixels / total * 100).toFixed(4) + "%)"],
+            [L("差异通道值","差異通道值","Differing channel values"), fmt(diffBytes) + " / " + fmt(total * 4)],
+            [L("最大单通道差","最大單通道差","Max channel difference"), String(maxDiff) + " / 255"],
+            [L("平均绝对误差","平均絕對誤差","Mean absolute error"), total ? (sumAbs / (total * 4)).toFixed(5) : "0"]
+          ]);
+          showCompare(state.view);
+          done();
+        }
+        step();
+      }
+
+      function measureSeams() {
+        // (a) 座標層面：相鄰切片共用同一條邊界（整數座標，零間隙零重疊）
+        var coordGap = 0;
+        state.tiles.forEach(function (t) {
+          state.tiles.forEach(function (o) {
+            if (o.col === t.col + 1 && o.row === t.row) coordGap = Math.max(coordGap, Math.abs(o.x - (t.x + t.w)));
+            if (o.row === t.row + 1 && o.col === t.col) coordGap = Math.max(coordGap, Math.abs(o.y - (t.y + t.h)));
+          });
+        });
+        // (b) 畫面層面：量測並排渲染後相鄰切片的實際邊界距離
+        var cells = $("tiles-grid").children;
+        var maxGap = 0, measured = 0;
+        function rectOf(idx) { return cells[idx].getBoundingClientRect(); }
+        for (var r = 0; r < state.rows; r++) {
+          for (var q = 0; q < state.cols; q++) {
+            var idx = r * state.cols + q, rc = rectOf(idx);
+            if (q + 1 < state.cols) { maxGap = Math.max(maxGap, Math.abs(rectOf(idx + 1).left - rc.right)); measured++; }
+            if (r + 1 < state.rows) { maxGap = Math.max(maxGap, Math.abs(rectOf(idx + state.cols).top - rc.bottom)); measured++; }
+          }
+        }
+        // 顯示縮放造成的次像素誤差 < 1 顯示像素視為貼合
+        var pass = coordGap === 0 && maxGap < 1;
+        state.results.seam = pass;
+        setVerdict("check-seam", pass ? "pass" : "fail", pass ? t("pass") : t("fail"));
+        finishOverall();
+        setMetrics("check-seam", [
+          [L("接缝总数","接縫總數","Seams"), fmt((state.cols - 1) * state.rows + (state.rows - 1) * state.cols)],
+          [L("坐标间隙","座標間隙","Coordinate gap"), coordGap + " px"],
+          [L("画面最大间隙","畫面最大間隙","Max on-screen gap"), maxGap.toFixed(2) + " px"],
+          [L("测量的相邻边界","量測相鄰邊界","Boundaries measured"), fmt(measured)]
+        ]);
+        buildSeamOptions();
+        drawSeam();
+      }
+
+      function buildSeamOptions() {
+        var sel = $("seam-select");
+        sel.innerHTML = "";
+        state.colX.slice(1).forEach(function (vx, i) {
+          var o = document.createElement("option");
+          o.value = "v" + vx; o.textContent = (state.lang==="en" ? "Vertical seam " : state.lang==="zh-Hant" ? "垂直縫 " : "垂直缝 ") + (i + 1) + " (x = " + fmt(vx) + ")";
+          sel.appendChild(o);
+        });
+        state.rowY.slice(1).forEach(function (hy, i) {
+          var o = document.createElement("option");
+          o.value = "h" + hy; o.textContent = (state.lang==="en" ? "Horizontal seam " : state.lang==="zh-Hant" ? "水平縫 " : "水平缝 ") + (i + 1) + " (y = " + fmt(hy) + ")";
+          sel.appendChild(o);
+        });
+        sel.disabled = sel.options.length === 0;
+        if (sel.options.length === 0) {
+          var o = document.createElement("option");
+          o.textContent = state.lang==="en" ? "(No internal seams for this cut)" : state.lang==="zh-Hant" ? "（此切法沒有內部接縫）" : "（此切法没有内部接缝）";
+          sel.appendChild(o);
+        }
+      }
+
+      function drawSeam() {
+        var cv = $("seam-canvas"), x = cv.getContext("2d");
+        var W = state.srcCanvas.width, H = state.srcCanvas.height;
+        x.imageSmoothingEnabled = false;
+        x.fillStyle = "#000"; x.fillRect(0, 0, cv.width, cv.height);
+        if (!state.rebuilt || $("seam-select").options.length === 0 || $("seam-select").disabled) {
+          x.fillStyle = "#888"; x.font = "14px sans-serif";
+          x.fillText(state.lang==="en" ? "No internal seam to inspect" : state.lang==="zh-Hant" ? "沒有內部接縫可檢視" : "没有内部接缝可检视", 16, 30);
+          return;
+        }
+        var val = $("seam-select").value;
+        var vertical = val.charAt(0) === "v";
+        var pos = parseInt(val.slice(1), 10);
+        var HALF = 16, ZOOM = 10;
+        // 取一條橫貫接縫中段的取樣帶
+        if (vertical) {
+          var sx = Math.max(0, pos - HALF), sw = Math.min(W - sx, HALF * 2);
+          var sy = Math.max(0, Math.floor(H / 2) - 8), sh = Math.min(H - sy, 16);
+          cv.width = sw * ZOOM; cv.height = sh * ZOOM;
+          x.imageSmoothingEnabled = false;
+          x.drawImage(state.rebuilt, sx, sy, sw, sh, 0, 0, cv.width, cv.height);
+          if ($("chk-seamline").checked) {
+            var lineX = (pos - sx) * ZOOM;
+            x.strokeStyle = "#e11d48"; x.lineWidth = 2; x.setLineDash([6, 4]);
+            x.beginPath(); x.moveTo(lineX, 0); x.lineTo(lineX, cv.height); x.stroke();
+            x.setLineDash([]);
+            x.strokeStyle = "rgba(255,255,255,.25)"; x.lineWidth = 1;
+            for (var gx = 0; gx <= sw; gx++) { x.beginPath(); x.moveTo(gx * ZOOM, 0); x.lineTo(gx * ZOOM, cv.height); x.stroke(); }
+          }
+        } else {
+          var sy2 = Math.max(0, pos - HALF), sh2 = Math.min(H - sy2, HALF * 2);
+          var sx2 = Math.max(0, Math.floor(W / 2) - 8), sw2 = Math.min(W - sx2, 16);
+          cv.width = sw2 * ZOOM; cv.height = sh2 * ZOOM;
+          x.imageSmoothingEnabled = false;
+          x.drawImage(state.rebuilt, sx2, sy2, sw2, sh2, 0, 0, cv.width, cv.height);
+          if ($("chk-seamline").checked) {
+            var lineY = (pos - sy2) * ZOOM;
+            x.strokeStyle = "#e11d48"; x.lineWidth = 2; x.setLineDash([6, 4]);
+            x.beginPath(); x.moveTo(0, lineY); x.lineTo(cv.width, lineY); x.stroke();
+            x.setLineDash([]);
+            x.strokeStyle = "rgba(255,255,255,.25)"; x.lineWidth = 1;
+            for (var gy = 0; gy <= sh2; gy++) { x.beginPath(); x.moveTo(0, gy * ZOOM); x.lineTo(cv.width, gy * ZOOM); x.stroke(); }
+          }
+        }
+      }
+
+      function runVerification() {
+        var token = ++state.verifyToken;
+        setStepper(3);
+        setOverall("running", state.lang==="en" ? "Verifying…" : "验证进行中…", state.lang==="en" ? "Comparing the rebuild pixel by pixel." : "正在逐像素比对拼回图。");
+        verifyCoverage();
+        state.rebuilt = buildRebuilt();
+        $("verify-progress").classList.remove("hidden");
+        $("progress-bar").value = 0;
+        verifyPixels(token, function () {
+          if (token !== state.verifyToken) return;
+          $("verify-progress").classList.add("hidden");
+          // 等並排網格完成排版後再量測接縫
+          requestAnimationFrame(function () {
+            if (token !== state.verifyToken) return;
+            measureSeams();
+          });
+        });
+      }
+
+      /* ---------------- compare viewer ---------------- */
+      function showCompare(view) {
+        if (state.slideMode) {
+          state.slideMode = false;
+          $("btn-slide").setAttribute("aria-pressed", "false");
+          $("slider-row").classList.remove("on");
+          $("cmp-stage").classList.remove("sliding");
+          $("cmp-top").style.clipPath = "";
+          $("cmp-label-r").classList.add("hidden");
+        }
+        state.view = view;
+        document.querySelectorAll("[data-view]").forEach(function (b) {
+          b.setAttribute("aria-pressed", b.dataset.view === view ? "true" : "false");
+        });
+        var base = $("cmp-base"), top = $("cmp-top"), label = $("cmp-label");
+        stopBlink();
+        top.classList.add("hidden");
+        var srcMap = { orig: state.srcCanvas, rebuilt: state.rebuilt, diff: state.diffCanvas };
+        var nameMap = { orig: t("orig"), rebuilt: t("rebuilt"), diff: t("diffLabel") };
+        var c = srcMap[view];
+        if (!c) return;
+        base.width = c.width; base.height = c.height;
+        base.getContext("2d").drawImage(c, 0, 0);
+        label.textContent = nameMap[view];
+      }
+      function stopBlink() {
+        if (state.blinkTimer) { clearInterval(state.blinkTimer); state.blinkTimer = null; }
+        $("btn-blink").setAttribute("aria-pressed", "false");
+        if (!state.slideMode) $("cmp-top").classList.add("hidden");
+      }
+      /* ---------------- 滑桿對比 ---------------- */
+      function applySlide() {
+        var top = $("cmp-top"), stage = $("cmp-stage");
+        var p = state.slidePos;
+        top.style.clipPath = "inset(0 0 0 " + p + "%)";
+        top.style.opacity = "1";
+        $("cmp-divider").style.left = p + "%";
+        $("cmp-range").value = p;
+        $("cmp-label").textContent = t("origLeft");
+        $("cmp-label-r").textContent = t("rebuiltRight");
+        $("cmp-label-r").classList.remove("hidden");
+        stage.classList.add("sliding");
+      }
+      function setSlideMode(on) {
+        state.slideMode = on;
+        $("btn-slide").setAttribute("aria-pressed", on ? "true" : "false");
+        $("slider-row").classList.toggle("on", on);
+        var stage = $("cmp-stage"), top = $("cmp-top");
+        if (on) {
+          stopBlink();
+          if (!state.rebuilt || !state.srcCanvas) return;
+          var base = $("cmp-base");
+          base.width = state.srcCanvas.width; base.height = state.srcCanvas.height;
+          base.getContext("2d").drawImage(state.srcCanvas, 0, 0);
+          top.width = state.rebuilt.width; top.height = state.rebuilt.height;
+          top.getContext("2d").drawImage(state.rebuilt, 0, 0);
+          top.classList.remove("hidden");
+          applySlide();
+        } else {
+          stage.classList.remove("sliding");
+          top.style.clipPath = "";
+          $("cmp-label-r").classList.add("hidden");
+          showCompare(state.view);
+        }
+      }
+      function toggleBlink() {
+        if (state.blinkTimer) { stopBlink(); showCompare(state.view); return; }
+        if (!state.rebuilt) return;
+        var base = $("cmp-base"), top = $("cmp-top"), label = $("cmp-label");
+        base.width = state.srcCanvas.width; base.height = state.srcCanvas.height;
+        base.getContext("2d").drawImage(state.srcCanvas, 0, 0);
+        top.width = state.rebuilt.width; top.height = state.rebuilt.height;
+        top.getContext("2d").drawImage(state.rebuilt, 0, 0);
+        top.classList.remove("hidden");
+        $("btn-blink").setAttribute("aria-pressed", "true");
+        var showTop = true;
+        label.textContent = t("blinkLabel");
+        state.blinkTimer = setInterval(function () {
+          showTop = !showTop;
+          top.style.opacity = showTop ? "1" : "0";
+          label.textContent = showTop ? t("blinkLabel") : t("origBlink");
+        }, 550);
+      }
+
+      /* ---------------- events ---------------- */
+      var dz = $("dropzone"), fi = $("file-input");
+      $("btn-pick").addEventListener("click", function (e) { e.stopPropagation(); fi.click(); });
+      dz.addEventListener("click", function () { fi.click(); });
+      dz.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fi.click(); } });
+      fi.addEventListener("change", function () {
+        if (fi.files && fi.files[0]) loadFromBlob(fi.files[0], fi.files[0].name);
+        fi.value = "";
+      });
+      ["dragenter", "dragover"].forEach(function (ev) {
+        dz.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.add("drag"); });
+      });
+      ["dragleave", "drop"].forEach(function (ev) {
+        dz.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.remove("drag"); });
+      });
+      dz.addEventListener("drop", function (e) {
+        var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+        if (f) loadFromBlob(f, f.name);
+      });
+      document.addEventListener("dragover", function (e) { e.preventDefault(); });
+      document.addEventListener("drop", function (e) { e.preventDefault(); });
+      $("btn-sample").addEventListener("click", function (e) { e.stopPropagation(); makeSampleImage(); });
+
+      $("presets").querySelectorAll("button").forEach(function (b) {
+        b.addEventListener("click", function () {
+          var c = parseInt(b.dataset.cols, 10), r = parseInt(b.dataset.rows, 10);
+          markPreset(c, r);
+          doCut(c, r);
+          $("sec-tiles").scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      });
+      $("btn-custom").addEventListener("click", function () {
+        var c = Math.min(16, Math.max(1, parseInt($("in-cols").value, 10) || 1));
+        var r = Math.min(16, Math.max(1, parseInt($("in-rows").value, 10) || 1));
+        markPreset(c, r);
+        doCut(c, r);
+        toast((state.lang==="en" ? "Custom cut: " : "已应用自定义切法：") + c + " × " + r);
+        $("sec-tiles").scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+      $("chk-grid").addEventListener("change", drawGridOverlay);
+      $("btn-download-all").addEventListener("click", downloadAll);
+      document.querySelectorAll("#lang-switch button").forEach(function (b) {
+        b.addEventListener("click", function () { applyLang(b.dataset.lang, true); });
+      });
+      document.querySelectorAll("#format-seg button").forEach(function (b) {
+        b.addEventListener("click", function () { state.exportFormat = b.dataset.format; updateExportUI(true); });
+      });
+      $("quality-range").addEventListener("input", function () { state.exportQuality = parseInt(this.value, 10) / 100; $("quality-val").textContent = this.value + "%"; });
+      $("quality-range").addEventListener("change", function () { if (state.tiles.length) estimateExport(); });
+      applyLang("zh-Hans", false);
+      $("btn-reverify").addEventListener("click", function () { resetVerdicts(); runVerification(); });
+      document.querySelectorAll("[data-view]").forEach(function (b) {
+        b.addEventListener("click", function () { showCompare(b.dataset.view); });
+      });
+      $("btn-blink").addEventListener("click", toggleBlink);
+      $("btn-slide").addEventListener("click", function () { setSlideMode(!state.slideMode); });
+      $("cmp-range").addEventListener("input", function () { state.slidePos = parseInt(this.value, 10); if (state.slideMode) applySlide(); });
+      (function () {
+        var stage = $("cmp-stage"), dragging = false;
+        function posFromEvent(e) {
+          var r = stage.getBoundingClientRect();
+          var x = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+          return Math.max(0, Math.min(100, Math.round(x / r.width * 100)));
+        }
+        stage.addEventListener("pointerdown", function (e) { if (!state.slideMode) return; dragging = true; state.slidePos = posFromEvent(e); applySlide(); });
+        window.addEventListener("pointermove", function (e) { if (!dragging || !state.slideMode) return; state.slidePos = posFromEvent(e); applySlide(); });
+        window.addEventListener("pointerup", function () { dragging = false; });
+      })();
+      $("btn-replace").addEventListener("click", function () { fi.click(); });
+      $("btn-sample2").addEventListener("click", function () { makeSampleImage(); });
+      /* 貼上圖片 */
+      document.addEventListener("paste", function (e) {
+        var items = e.clipboardData && e.clipboardData.items;
+        if (!items) return;
+        for (var i = 0; i < items.length; i++) {
+          if (items[i].type.indexOf("image/") === 0) {
+            var f = items[i].getAsFile();
+            if (f) { loadFromBlob(f, t("pastedName")); toast(state.lang==="en" ? "Pasted from clipboard" : "已粘贴剪贴板图片"); }
+            break;
+          }
+        }
+      });
+      /* 全頁拖放提示 */
+      var dragDepth = 0;
+      document.addEventListener("dragenter", function (e) { if (e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types || [], "Files") >= 0) { dragDepth++; $("page-drag").classList.add("on"); } });
+      document.addEventListener("dragleave", function () { dragDepth = Math.max(0, dragDepth - 1); if (!dragDepth) $("page-drag").classList.remove("on"); });
+      document.addEventListener("drop", function () { dragDepth = 0; $("page-drag").classList.remove("on"); });
+      /* 切法迷你示意圖 */
+      $("presets").querySelectorAll("button").forEach(function (b) {
+        var c = parseInt(b.dataset.cols, 10), r = parseInt(b.dataset.rows, 10);
+        var mini = document.createElement("span");
+        mini.className = "mini";
+        mini.style.gridTemplateColumns = "repeat(" + c + ", 1fr)";
+        mini.style.gridTemplateRows = "repeat(" + r + ", 1fr)";
+        for (var i = 0; i < c * r; i++) mini.appendChild(document.createElement("i"));
+        b.insertBefore(mini, b.firstChild);
+      });
+      /* 卡片進場動效 */
+      if ("IntersectionObserver" in window && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        var io = new IntersectionObserver(function (es) {
+          es.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); } });
+        }, { threshold: .06 });
+        document.querySelectorAll("section.card").forEach(function (s) { s.classList.add("reveal"); io.observe(s); });
+      }
+      $("seam-select").addEventListener("change", drawSeam);
+      $("chk-seamline").addEventListener("change", drawSeam);
+      window.addEventListener("resize", function () {
+        // 視窗尺寸改變後，重新量測並排間隙（僅在已有切片時）
+        if (state.tiles.length && state.rebuilt) {
+          clearTimeout(window.__seamT);
+          window.__seamT = setTimeout(measureSeams, 250);
+        }
+      });
+    </script>
+  </body>
+</html>
