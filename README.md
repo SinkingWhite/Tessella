@@ -16,7 +16,9 @@ Import an image, slice it into 2 / 3 / 4 / 6 / 9 / 12 / 16 parts (or a custom gr
 
 ## Usage
 
-Open `index.html` in any modern browser. Drag & drop an image (or paste with Ctrl+V), pick a slice mode, and the verification runs automatically.
+Try it online: https://me.irisjade.cn/slicelab
+
+Or open `index.html` in any modern browser. Drag & drop an image (or paste with Ctrl+V), pick a slice mode, and the verification runs automatically.
 
 ## License
 
